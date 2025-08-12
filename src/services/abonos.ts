@@ -6,7 +6,7 @@ import { auth } from '../firebase';
 import { ligaId } from '../config';
 const temporadaId = 'TEMPORADA_DEMO';
 
-export const addAbono = async (cobroId: string, data: AbonoForm) => {
+export const addAbono = async (cobroId: string, data: AbonoForm & { equipoNombre?: string }) => {
   const user = auth.currentUser;
   const abonosCol = collection(
     db,

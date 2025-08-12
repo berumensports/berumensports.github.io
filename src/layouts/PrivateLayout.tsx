@@ -9,11 +9,15 @@ import {
   DollarSign,
   FileText,
   ClipboardList,
+  UserCheck,
+  Flag,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard' },
   { to: '/equipos', icon: Users, label: 'Equipos' },
+  { to: '/arbitros', icon: UserCheck, label: 'Árbitros' },
+  { to: '/delegaciones', icon: Flag, label: 'Delegaciones' },
   { to: '/temporadas', icon: Calendar, label: 'Temporadas' },
   { to: '/tarifas', icon: ClipboardList, label: 'Tarifas' },
   { to: '/partidos', icon: Calendar, label: 'Partidos' },
