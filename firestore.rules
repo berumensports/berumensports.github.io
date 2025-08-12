@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function userRole(ligaId, uid) {
+      return get(/databases/$(database)/documents/ligas/$(ligaId)/usuarios/$(uid)).data.role;
+    }
+
+    match /ligas/{ligaId}/{document=**} {
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/ligas/$(ligaId)/usuarios/$(request.auth.uid));
+    }
+
+    match /ligas/{ligaId}/usuarios/{uid} {
+      allow write: if false;
+    }
+
+    match /ligas/{ligaId}/{coll}/{doc} {
+      allow write: if request.auth != null && userRole(ligaId, request.auth.uid) == 'admin';
+    }
+
+    match /ligas/{ligaId}/temporadas/{tempId}/cobros/{cobroId}/abonos/{abonoId} {
+      allow create: if request.resource.data.monto > 0 &&
+        request.auth != null && userRole(ligaId, request.auth.uid) == 'admin';
+    }
+  }
+}
