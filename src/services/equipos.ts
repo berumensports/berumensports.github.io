@@ -1,8 +1,7 @@
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { EquipoForm } from '../components/ModalEquipoForm';
-
-const ligaId = import.meta.env.VITE_LIGA_ID as string;
+import { ligaId } from '../config';
 
 export const createEquipo = async (data: EquipoForm) => {
   const col = collection(db, 'ligas', ligaId, 'equipos');

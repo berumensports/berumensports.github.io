@@ -1,7 +1,6 @@
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
-
-const ligaId = import.meta.env.VITE_LIGA_ID as string;
+import { ligaId } from '../config';
 const temporadaId = 'TEMPORADA_DEMO';
 const tarifasCol = collection(db, 'ligas', ligaId, 'temporadas', temporadaId, 'tarifas');
 
