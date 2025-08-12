@@ -1,8 +1,25 @@
 import { useState } from 'react';
+import { Column } from '../components/DataTable';
+import RecordView from '../components/RecordView';
 import ModalTarifaForm from '../components/ModalTarifaForm';
+
+interface Tarifa {
+  concepto: string;
+  monto: number;
+}
 
 export default function Tarifas() {
   const [open, setOpen] = useState(false);
+
+  const tarifas: Tarifa[] = [
+    { concepto: 'Inscripción', monto: 50 },
+  ];
+
+  const columns: Column<Tarifa>[] = [
+    { key: 'concepto', header: 'Concepto' },
+    { key: 'monto', header: 'Monto' },
+  ];
+
   return (
     <div>
       <div className="flex justify-between mb-4">
@@ -11,7 +28,16 @@ export default function Tarifas() {
           Nueva tarifa
         </button>
       </div>
-      {/* tabla de tarifas pendiente */}
+      <RecordView
+        columns={columns}
+        data={tarifas}
+        cardRender={(t) => (
+          <div>
+            <div className="font-bold">{t.concepto}</div>
+            <div>Monto: {t.monto}</div>
+          </div>
+        )}
+      />
       <ModalTarifaForm open={open} onClose={() => setOpen(false)} />
     </div>
   );
