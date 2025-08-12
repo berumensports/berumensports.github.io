@@ -1,7 +1,6 @@
 import { addDoc, collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
-
-const ligaId = import.meta.env.VITE_LIGA_ID as string;
+import { ligaId } from '../config';
 const temporadasCol = collection(db, 'ligas', ligaId, 'temporadas');
 
 export const createTemporada = async (data: any) => {

@@ -2,6 +2,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
+import { ligaId } from '../config';
 
 export type Role = 'admin' | 'consulta';
 
@@ -17,7 +18,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
-  const ligaId = import.meta.env.VITE_LIGA_ID as string;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {

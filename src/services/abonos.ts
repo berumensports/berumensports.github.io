@@ -3,8 +3,7 @@ import { db } from '../firebase';
 import { updateSaldo, getCobro } from './cobros';
 import { AbonoForm } from '../components/ModalAbonoForm';
 import { auth } from '../firebase';
-
-const ligaId = import.meta.env.VITE_LIGA_ID as string;
+import { ligaId } from '../config';
 const temporadaId = 'TEMPORADA_DEMO';
 
 export const addAbono = async (cobroId: string, data: AbonoForm) => {

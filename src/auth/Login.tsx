@@ -10,6 +10,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { ligaId } from '../config';
 
 const schema = z.object({
   email: z.string().email(),
@@ -27,7 +28,6 @@ export default function Login() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
   const navigate = useNavigate();
-  const ligaId = import.meta.env.VITE_LIGA_ID as string;
 
   const onSubmit = async (data: FormData) => {
     if (isRegister) {

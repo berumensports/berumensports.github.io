@@ -1,8 +1,7 @@
 import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { PartidoForm } from '../components/ModalPartidoForm';
-
-const ligaId = import.meta.env.VITE_LIGA_ID as string;
+import { ligaId } from '../config';
 const temporadaId = 'TEMPORADA_DEMO';
 const partidosCol = collection(db, 'ligas', ligaId, 'temporadas', temporadaId, 'partidos');
 
