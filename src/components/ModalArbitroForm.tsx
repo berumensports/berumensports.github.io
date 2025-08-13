@@ -39,11 +39,26 @@ export default function ModalArbitroForm({ open, onClose, onSave, initialData }:
       <div className="bg-white p-4 rounded shadow w-96 relative z-20 space-y-2">
         <Dialog.Title className="text-lg font-bold">Árbitro</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <input className="border p-2 w-full" placeholder="Nombre" {...register('nombre')} />
+          <input
+            className="border p-2 w-full"
+            placeholder="Nombre"
+            title="Nombre"
+            {...register('nombre')}
+          />
           {errors.nombre && <p className="text-red-500 text-sm">Requerido</p>}
-          <input className="border p-2 w-full" placeholder="Teléfono" {...register('telefono')} />
-          <input className="border p-2 w-full" placeholder="Correo" {...register('correo')} />
-          <select className="border p-2 w-full" {...register('estatus')}>
+          <input
+            className="border p-2 w-full"
+            placeholder="Teléfono"
+            title="Teléfono"
+            {...register('telefono')}
+          />
+          <input
+            className="border p-2 w-full"
+            placeholder="Correo"
+            title="Correo"
+            {...register('correo')}
+          />
+          <select className="border p-2 w-full" title="Estatus" {...register('estatus')}>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>

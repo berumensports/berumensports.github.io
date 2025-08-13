@@ -36,7 +36,12 @@ export default function ModalDelegacionForm({ open, onClose, onSave, initialData
       <div className="bg-white p-4 rounded shadow w-96 relative z-20 space-y-2">
         <Dialog.Title className="text-lg font-bold">Delegación</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <input className="border p-2 w-full" placeholder="Nombre" {...register('nombre')} />
+          <input
+            className="border p-2 w-full"
+            placeholder="Nombre"
+            title="Nombre"
+            {...register('nombre')}
+          />
           {errors.nombre && <p className="text-red-500 text-sm">Requerido</p>}
           <div className="flex justify-end space-x-2 pt-2">
             <button type="button" className="px-3 py-1" onClick={onClose}>
