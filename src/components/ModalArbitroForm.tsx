@@ -16,10 +16,11 @@ export type ArbitroForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: ArbitroForm) => void;
   initialData?: Partial<ArbitroForm>;
 }
 
-export default function ModalArbitroForm({ open, onClose, initialData }: Props) {
+export default function ModalArbitroForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -28,6 +29,7 @@ export default function ModalArbitroForm({ open, onClose, initialData }: Props) 
 
   const onSubmit = async (data: ArbitroForm) => {
     await createArbitro(data);
+    onSave?.(data);
     onClose();
   };
 

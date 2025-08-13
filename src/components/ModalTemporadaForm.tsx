@@ -16,10 +16,11 @@ export type TemporadaForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: TemporadaForm) => void;
   initialData?: Partial<TemporadaForm>;
 }
 
-export default function ModalTemporadaForm({ open, onClose, initialData }: Props) {
+export default function ModalTemporadaForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -28,6 +29,7 @@ export default function ModalTemporadaForm({ open, onClose, initialData }: Props
 
   const onSubmit = async (data: TemporadaForm) => {
     await createTemporada(data);
+    onSave?.(data);
     onClose();
   };
 

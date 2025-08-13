@@ -13,10 +13,11 @@ export type DelegacionForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: DelegacionForm) => void;
   initialData?: Partial<DelegacionForm>;
 }
 
-export default function ModalDelegacionForm({ open, onClose, initialData }: Props) {
+export default function ModalDelegacionForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -25,6 +26,7 @@ export default function ModalDelegacionForm({ open, onClose, initialData }: Prop
 
   const onSubmit = async (data: DelegacionForm) => {
     await createDelegacion(data);
+    onSave?.(data);
     onClose();
   };
 

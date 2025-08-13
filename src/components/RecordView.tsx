@@ -6,9 +6,11 @@ interface Props<T> {
   columns: Column<T>[];
   data: T[];
   cardRender: (row: T) => React.ReactNode;
+  onEdit?: (row: T, idx: number) => void;
+  onDelete?: (row: T, idx: number) => void;
 }
 
-export default function RecordView<T>({ columns, data, cardRender }: Props<T>) {
+export default function RecordView<T>({ columns, data, cardRender, onEdit, onDelete }: Props<T>) {
   const [view, setView] = useState<'table' | 'cards'>('table');
 
   return (
@@ -28,9 +30,9 @@ export default function RecordView<T>({ columns, data, cardRender }: Props<T>) {
         </button>
       </div>
       {view === 'table' ? (
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={data} onEdit={onEdit} onDelete={onDelete} />
       ) : (
-        <CardList data={data} render={cardRender} />
+        <CardList data={data} render={cardRender} onEdit={onEdit} onDelete={onDelete} />
       )}
     </div>
   );
