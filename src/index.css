@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #f7f8fb;
+  --bg-card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #3b82f6;
+  --primary-600: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --gap: 16px;
+}
+
+body {
+  @apply bg-[color:var(--bg)] text-[color:var(--text)] font-sans;
+}
