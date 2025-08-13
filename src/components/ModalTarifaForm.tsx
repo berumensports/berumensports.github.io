@@ -20,6 +20,7 @@ interface Props {
 }
 
 export default function ModalTarifaForm({ open, onClose, onSave, initialData }: Props) {
+  const categorias = Array.from({ length: 2020 - 2009 + 1 }, (_, i) => 2009 + i);
   const {
     register,
     handleSubmit,
@@ -38,21 +39,28 @@ export default function ModalTarifaForm({ open, onClose, onSave, initialData }: 
       <div className="bg-white p-4 rounded shadow w-96 relative z-20 space-y-2">
         <Dialog.Title className="text-lg font-bold">Tarifa</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <select className="border p-2 w-full" {...register('rama')}>
+          <select className="border p-2 w-full" title="Rama" {...register('rama')}>
             <option value="Varonil">Varonil</option>
             <option value="Femenil">Femenil</option>
           </select>
-          <input
-            type="number"
+          <select
             className="border p-2 w-full"
-            placeholder="Categoría"
+            title="Categoría"
             {...register('categoria', { valueAsNumber: true })}
-          />
+          >
+            <option value="">Seleccione categoría</option>
+            {categorias.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
           {errors.categoria && <p className="text-red-500 text-sm">Categoría inválida</p>}
           <input
             type="number"
             className="border p-2 w-full"
             placeholder="Monto"
+            title="Monto"
             {...register('monto', { valueAsNumber: true })}
           />
           {errors.monto && <p className="text-red-500 text-sm">Monto inválido</p>}

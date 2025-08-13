@@ -57,15 +57,26 @@ export default function ModalAbonoForm({ open, onClose, cobroId, saldo, onSave, 
       <div className="bg-white p-4 rounded shadow w-96 relative z-20 space-y-2">
         <Dialog.Title className="text-lg font-bold">Registrar abono</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <input type="date" className="border p-2 w-full" {...register('fecha')} />
-          <input type="number" className="border p-2 w-full" placeholder="Monto" {...register('monto', { valueAsNumber: true })} />
+          <input type="date" className="border p-2 w-full" title="Fecha" {...register('fecha')} />
+          <input
+            type="number"
+            className="border p-2 w-full"
+            placeholder="Monto"
+            title="Monto"
+            {...register('monto', { valueAsNumber: true })}
+          />
           {errors.monto && <p className="text-red-500 text-sm">Monto inválido</p>}
-          <select className="border p-2 w-full" {...register('metodo')}>
+          <select className="border p-2 w-full" title="Método" {...register('metodo')}>
             <option value="efectivo">Efectivo</option>
             <option value="transferencia">Transferencia</option>
           </select>
-          <input className="border p-2 w-full" placeholder="Referencia" {...register('ref')} />
-          <select className="border p-2 w-full" {...register('equipoId')}>
+          <input
+            className="border p-2 w-full"
+            placeholder="Referencia"
+            title="Referencia"
+            {...register('ref')}
+          />
+          <select className="border p-2 w-full" title="Equipo" {...register('equipoId')}>
             <option value="">Seleccione equipo</option>
             {equipos.map((e) => (
               <option key={e.id} value={e.id}>

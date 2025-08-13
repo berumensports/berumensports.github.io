@@ -39,12 +39,17 @@ export default function ModalTemporadaForm({ open, onClose, onSave, initialData 
       <div className="bg-white p-4 rounded shadow w-96 relative z-20 space-y-2">
         <Dialog.Title className="text-lg font-bold">Temporada</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <input className="border p-2 w-full" placeholder="Nombre" {...register('nombre')} />
+          <input
+            className="border p-2 w-full"
+            placeholder="Nombre"
+            title="Nombre"
+            {...register('nombre')}
+          />
           {errors.nombre && <p className="text-red-500 text-sm">Requerido</p>}
-          <input type="date" className="border p-2 w-full" {...register('inicio')} />
-          <input type="date" className="border p-2 w-full" {...register('fin')} />
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" {...register('activa')} />
+          <input type="date" className="border p-2 w-full" title="Inicio" {...register('inicio')} />
+          <input type="date" className="border p-2 w-full" title="Fin" {...register('fin')} />
+          <label className="flex items-center space-x-2" title="Activa">
+            <input type="checkbox" title="Activa" {...register('activa')} />
             <span>Activa</span>
           </label>
           <div className="flex justify-end space-x-2 pt-2">
