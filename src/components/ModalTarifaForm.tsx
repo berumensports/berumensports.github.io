@@ -15,10 +15,11 @@ export type TarifaForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: TarifaForm) => void;
   initialData?: Partial<TarifaForm>;
 }
 
-export default function ModalTarifaForm({ open, onClose, initialData }: Props) {
+export default function ModalTarifaForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -27,6 +28,7 @@ export default function ModalTarifaForm({ open, onClose, initialData }: Props) {
 
   const onSubmit = async (data: TarifaForm) => {
     await createTarifa(data);
+    onSave?.(data);
     onClose();
   };
 

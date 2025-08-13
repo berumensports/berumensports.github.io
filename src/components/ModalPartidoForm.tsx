@@ -26,10 +26,11 @@ export type PartidoForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: PartidoForm) => void;
   initialData?: Partial<PartidoForm>;
 }
 
-export default function ModalPartidoForm({ open, onClose, initialData }: Props) {
+export default function ModalPartidoForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -38,6 +39,7 @@ export default function ModalPartidoForm({ open, onClose, initialData }: Props) 
 
   const onSubmit = async (data: PartidoForm) => {
     await createPartido({ ...data, estado: 'programado' });
+    onSave?.(data);
     onClose();
   };
 

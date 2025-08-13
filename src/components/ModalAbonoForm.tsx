@@ -21,15 +21,20 @@ interface Props {
   onClose: () => void;
   cobroId: string;
   saldo: number;
+  onSave?: (data: AbonoForm) => void;
+  initialData?: Partial<AbonoForm>;
 }
 
-export default function ModalAbonoForm({ open, onClose, cobroId, saldo }: Props) {
+export default function ModalAbonoForm({ open, onClose, cobroId, saldo, onSave, initialData }: Props) {
   const [equipos, setEquipos] = useState<any[]>([]);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<AbonoForm>({ resolver: zodResolver(schema), defaultValues: { fecha: new Date().toISOString().substring(0, 10) } });
+  } = useForm<AbonoForm>({
+    resolver: zodResolver(schema),
+    defaultValues: { fecha: new Date().toISOString().substring(0, 10), ...initialData },
+  });
 
   useEffect(() => {
     listEquipos().then(setEquipos);
@@ -42,6 +47,7 @@ export default function ModalAbonoForm({ open, onClose, cobroId, saldo }: Props)
     }
     const equipo = equipos.find((e) => e.id === data.equipoId);
     await addAbono(cobroId, { ...data, equipoNombre: equipo?.nombre });
+    onSave?.(data);
     onClose();
   };
 

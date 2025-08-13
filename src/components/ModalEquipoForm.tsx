@@ -17,10 +17,11 @@ export type EquipoForm = z.infer<typeof schema>;
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave?: (data: EquipoForm) => void;
   initialData?: Partial<EquipoForm>;
 }
 
-export default function ModalEquipoForm({ open, onClose, initialData }: Props) {
+export default function ModalEquipoForm({ open, onClose, onSave, initialData }: Props) {
   const {
     register,
     handleSubmit,
@@ -29,6 +30,7 @@ export default function ModalEquipoForm({ open, onClose, initialData }: Props) {
 
   const onSubmit = async (data: EquipoForm) => {
     await createEquipo(data);
+    onSave?.(data);
     onClose();
   };
 
