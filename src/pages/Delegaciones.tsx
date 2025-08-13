@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Column } from '../components/DataTable';
 import RecordView from '../components/RecordView';
 import ModalDelegacionForm, { DelegacionForm } from '../components/ModalDelegacionForm';
+import PageHeader from '../components/PageHeader';
+import ActionBar from '../components/ActionBar';
+import EmptyState from '../components/EmptyState';
 
 interface Delegacion {
   nombre: string;
@@ -14,43 +17,68 @@ export default function Delegaciones() {
     { nombre: 'Delegación Norte', contacto: 'Carlos' },
   ]);
   const [editing, setEditing] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [view, setView] = useState<'table' | 'cards'>('table');
+
+  const filtered = delegaciones.filter((d) =>
+    d.nombre.toLowerCase().includes(search.toLowerCase())
+  );
 
   const columns: Column<Delegacion>[] = [
     { key: 'nombre', header: 'Nombre' },
     { key: 'contacto', header: 'Contacto' },
   ];
 
+  const openNew = () => {
+    setEditing(null);
+    setOpen(true);
+  };
+
+  const renderNewButton = () => (
+    <button
+      className="bg-[color:var(--primary)] text-white px-3 py-1 rounded"
+      onClick={openNew}
+    >
+      Nueva delegación
+    </button>
+  );
+
   return (
     <div>
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Delegaciones</h1>
-        <button
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-          onClick={() => {
-            setEditing(null);
+      <PageHeader title="Delegaciones" count={filtered.length} view={view} />
+      <ActionBar
+        search={search}
+        onSearch={setSearch}
+        view={view}
+        onViewChange={setView}
+        actions={renderNewButton()}
+      />
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="Aún no hay delegaciones"
+          description="Crea tu primera delegación para empezar a organizar la liga"
+          action={renderNewButton()}
+        />
+      ) : (
+        <RecordView
+          columns={columns}
+          data={filtered}
+          onEdit={(_, idx) => {
+            setEditing(idx);
             setOpen(true);
           }}
-        >
-          Nueva delegación
-        </button>
-      </div>
-      <RecordView
-        columns={columns}
-        data={delegaciones}
-        onEdit={(_, idx) => {
-          setEditing(idx);
-          setOpen(true);
-        }}
-        onDelete={(_, idx) =>
-          setDelegaciones((prev) => prev.filter((_, i) => i !== idx))
-        }
-        cardRender={(d) => (
-          <div>
-            <div className="font-bold">{d.nombre}</div>
-            <div>{d.contacto}</div>
-          </div>
-        )}
-      />
+          onDelete={(_, idx) =>
+            setDelegaciones((prev) => prev.filter((_, i) => i !== idx))
+          }
+          cardRender={(d) => (
+            <div>
+              <div className="font-bold">{d.nombre}</div>
+              <div>{d.contacto}</div>
+            </div>
+          )}
+          view={view}
+        />
+      )}
       <ModalDelegacionForm
         open={open}
         onClose={() => setOpen(false)}
