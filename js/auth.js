@@ -26,7 +26,7 @@ export async function ensureUserProfile(user = auth.currentUser) {
 }
 
 export async function ensureTemporada() {
-  const ref = doc(db, `ligas/${LIGA_ID}/temporada`);
+  const ref = doc(db, `ligas/${LIGA_ID}/temporada/${TEMP_ID}`);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
     await setDoc(ref, {

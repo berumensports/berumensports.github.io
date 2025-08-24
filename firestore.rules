@@ -19,7 +19,7 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.categoria >= 2009 && request.resource.data.categoria <= 2020;
       }
-      match /temporada {
+      match /temporada/{tempId} {
         allow read: if isSignedIn();
         allow write: if isAdmin();
       }
