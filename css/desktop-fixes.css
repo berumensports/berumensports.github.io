@@ -17,19 +17,22 @@
   }
   .topbar .inner{
     max-width: var(--page-max);
-    margin-left: calc(var(--sidebar-w) + var(--gutter));
-    margin-right: var(--gutter);
+    margin: 0 auto;
     padding-inline: var(--gutter);
     display: grid;
     grid-template-columns: 1fr auto auto;
     align-items: center;
     gap: 12px;
   }
+  body.auth .topbar .inner{
+    margin-left: calc(var(--sidebar-w) + var(--gutter));
+    margin-right: var(--gutter);
+  }
   /* Ocultar el botón hamburguesa en desktop */
   .menu-button{ display: none !important; }
 
-  /* Sidebar: fija a la izquierda, altura total, siempre visible en desktop */
-  .sidedrawer{
+  /* Sidebar: fija a la izquierda para usuarios autenticados */
+  body.auth .sidedrawer{
     position: sticky !important;
     top: 64px;
     left: 0;
@@ -42,17 +45,20 @@
     z-index: 40;
     display: block !important; /* forzar visible aunque JS ponga hidden en móvil */
   }
-  .sidedrawer nav{
+  body.auth .sidedrawer nav{
     padding: 12px;
   }
 
-  /* Contenido: ancho máximo, centrado, con margen izquierdo para sidebar */
+  /* Contenido: ancho máximo; si hay sesión deja espacio para la sidebar */
   #app{
     max-width: var(--page-max);
-    margin-left: calc(var(--sidebar-w) + var(--gutter));
-    margin-right: var(--gutter);
+    margin: 0 auto;
     padding: var(--gutter);
     min-height: calc(100vh - 64px);
+  }
+  body.auth #app{
+    margin-left: calc(var(--sidebar-w) + var(--gutter));
+    margin-right: var(--gutter);
   }
 
   /* Ocultar la tabbar de móvil en desktop */

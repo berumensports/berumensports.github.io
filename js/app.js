@@ -79,6 +79,7 @@ function initLogout() {
 }
 
 onAuthChanged(async (user) => {
+  document.body.classList.toggle('auth', !!user);
   const roleEl = qs('#user-role');
   const emailEl = qs('#user-email');
   if (user) {
@@ -90,6 +91,7 @@ onAuthChanged(async (user) => {
   } else {
     emailEl.textContent = '';
     roleEl.textContent = '';
+    roleEl.className = 'badge';
     router();
   }
 });
