@@ -1,42 +1,48 @@
-import { listCobros, registrarAbono } from "../data/cobros.js";
-import { currentProfile } from "../auth.js";
-import { qs, on, formDataToObj } from "../utils.js";
+import { db, collection, getDocs, addDoc } from '../firebase-ui.js';
+import { el, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { LIGA_ID, TEMP_ID } from '../constants.js';
 
-export default {
-  title: 'Cobros',
-  async render(root) {
-    const admin = currentProfile?.role === 'admin';
-    let cobros = await listCobros({});
-    root.innerHTML = `
-      <h2>Cobros</h2>
-      <table class="table"><thead><tr><th>Equipo</th><th>Monto</th><th>Saldo</th><th>Estatus</th>${admin?'<th></th>':''}</tr></thead><tbody id="tbody"></tbody></table>
-      <div id="abonoModal" class="modal-overlay"><div class="modal"><form id="abonoForm"><h3>Abono</h3>
-        <input type="hidden" name="cobroId" />
-        <label>Monto<input type="number" name="monto" min="1" required></label>
-        <label>Método<select name="metodo"><option value="efectivo">efectivo</option><option value="transferencia">transferencia</option></select></label>
-        <label>Ref<input name="ref" /></label>
-        <div class="gap"><button class="btn" type="submit">Guardar</button><button type="button" class="btn" id="cancelAbono">Cancelar</button></div>
-      </form></div></div>`;
-    const tbody = qs('#tbody', root);
-    const modal = qs('#abonoModal', root);
-    const form = qs('#abonoForm', root);
-    function renderTable(){
-      tbody.innerHTML = cobros.map(c=>`<tr><td>${c.equipoNombre||''}</td><td>${c.montoTotal}</td><td>${c.saldo}</td><td>${c.estatus}</td>${admin?`<td><button class='abono btn' data-id='${c.id}'>Abono</button></td>`:''}</tr>`).join('');
+export async function render(){
+  const section=el('section',{class:'stack'});
+  section.appendChild(el('h2',{},'Cobros'));
+  const container=el('div',{class:'stack'}); section.appendChild(container);
+
+  async function load(){
+    const snap=await getDocs(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros`));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!rows.length){
+      container.innerHTML='';
+      container.appendChild(emptyState({icon:'payments',title:'Sin cobros',body:'',action:null}));
+      return;
     }
-    renderTable();
-    if(admin){
-      on(tbody,'click','.abono',e=>{form.reset();form.cobroId.value=e.target.dataset.id;modal.classList.add('open');});
-      qs('#cancelAbono', root).addEventListener('click',()=>modal.classList.remove('open'));
-      form.addEventListener('submit', async e=>{
-        e.preventDefault();
-        const data = formDataToObj(form);
-        try{
-          await registrarAbono(data.cobroId,{monto:Number(data.monto),metodo:data.metodo,ref:data.ref});
-          modal.classList.remove('open');
-          cobros = await listCobros({});
-          renderTable();
-        }catch(err){alert(err.message);}
-      });
-    }
+    container.innerHTML='';
+    rows.forEach(row=>{
+      container.appendChild(el('div',{class:'card stack-sm'},[
+        el('h3',{},row.equipo||'Equipo'),
+        el('p',{},`Monto: $${row.monto||0}`),
+        el('p',{},`Saldo: $${row.saldo||0}`),
+        el('button',{class:'btn btn-primary btn-xs',onClick:()=>openAbono(row)},'Registrar abono')
+      ]));
+    });
   }
-};
+
+  function openAbono(row){
+    const form=el('form',{class:'stack'},[
+      el('p',{},row.equipo),
+      el('label',{},['Monto', el('input',{class:'input',type:'number',name:'monto',min:1,max:row.saldo,required:true})]),
+      el('button',{class:'btn btn-primary',type:'submit'},'Guardar')
+    ]);
+    form.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const data=readForm(form); const m=Number(data.monto);
+      if(m<=0 || m>row.saldo){showToast('error','Monto inválido');return;}
+      const btn=form.querySelector('button'); setBusy(btn,true);
+      try{ await addDoc(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros/${row.id}/abonos`), {monto:m,fecha:new Date().toISOString()}); closeModal(); showToast('success','Abono registrado'); }
+      catch(err){showToast('error',err.message);} finally{ setBusy(btn,false); }
+    });
+    openSheet('Registrar abono',form);
+  }
+
+  await load();
+  return section;
+}

@@ -5,38 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <link rel="icon" href="./img/favicon.ico" />
   <title>Berumen Sports • Liga 2025</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="./css/berumen.css" />
 </head>
-<body class="hidden" id="app">
+<body>
   <header class="topbar">
-    <button id="menuBtn" class="btn">☰</button>
-    <h1 class="title">Berumen Sports • Liga 2025</h1>
-    <nav id="breadcrumb" class="breadcrumb"></nav>
-    <div class="spacer"></div>
-    <span id="userRole" class="badge"></span>
-    <span id="userEmail" class="truncate"></span>
-    <button id="logoutBtn" class="btn logout">Salir</button>
+    <button id="menu-btn" class="btn-icon" aria-label="Menú">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <h1 class="topbar-title">Berumen Sports • Liga 2025</h1>
+    <div class="topbar-user">
+      <span id="user-role" class="badge"></span>
+      <span id="user-email" class="truncate"></span>
+      <button id="logout-btn" class="btn btn-danger btn-xs">Salir</button>
+    </div>
   </header>
-  <aside id="sidebar" class="sidebar">
-      <nav>
-        <a href="#/">Dashboard</a>
-        <a href="#/delegaciones">Delegaciones</a>
-        <a href="#/equipos">Equipos</a>
-        <a href="#/tarifas">Tarifas</a>
-        <a href="#/partidos">Partidos</a>
-        <a href="#/cobros">Cobros</a>
-        <a href="#/reportes">Reportes</a>
-      </nav>
-    </aside>
-  <main id="main" class="main"></main>
+  <aside class="sidedrawer" hidden>
+    <nav>
+      <a href="#/">Dashboard</a>
+      <a href="#/partidos">Partidos</a>
+      <a href="#/equipos">Equipos</a>
+      <a href="#/cobros">Cobros</a>
+      <a href="#/delegaciones">Delegaciones</a>
+      <a href="#/tarifas">Tarifas</a>
+      <a href="#/reportes">Reportes</a>
+    </nav>
+  </aside>
+  <main id="app" class="container"></main>
+  <nav class="tabbar">
+    <a href="#/" data-tab="home"><span class="material-symbols-outlined">home</span><span class="tab-label">Inicio</span></a>
+    <a href="#/partidos" data-tab="partidos"><span class="material-symbols-outlined">sports</span><span class="tab-label">Partidos</span></a>
+    <a href="#/equipos" data-tab="equipos"><span class="material-symbols-outlined">groups</span><span class="tab-label">Equipos</span></a>
+    <a href="#/cobros" data-tab="cobros"><span class="material-symbols-outlined">payments</span><span class="tab-label">Cobros</span></a>
+    <a href="#/more" data-tab="more"><span class="material-symbols-outlined">more_horiz</span><span class="tab-label">Más</span></a>
+  </nav>
+  <div id="toaster"></div>
+  <div id="modal-root"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  </script>
-  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./js/app.js"></script>
   <noscript>Necesitas habilitar JavaScript para usar esta aplicación.</noscript>
 </body>
 </html>

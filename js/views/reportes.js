@@ -1,25 +1,36 @@
-import { listCobros } from "../data/cobros.js";
-import { qs, formDataToObj, money } from "../utils.js";
+import { db, collection, getDocs } from '../firebase-ui.js';
+import { el, renderResponsiveTable, showToast, emptyState } from '../ui-kit.js';
+import { LIGA_ID, TEMP_ID } from '../constants.js';
 
-export default {
-  title: 'Reportes',
-  async render(root) {
-    let cobros = await listCobros({});
-    root.innerHTML = `
-      <h2>Reportes</h2>
-      <button id="exportPdf" class="btn">Exportar PDF</button>
-      <table class="table"><thead><tr><th>Equipo</th><th>Monto</th><th>Saldo</th></tr></thead><tbody id="tbody"></tbody></table>
-    `;
-    const tbody = qs('#tbody', root);
-    function renderTable(){
-      tbody.innerHTML = cobros.map(c=>`<tr><td>${c.equipoNombre||''}</td><td>${money(c.montoTotal)}</td><td>${money(c.saldo)}</td></tr>`).join('');
-    }
-    renderTable();
-    qs('#exportPdf', root).addEventListener('click',()=>{
-      const doc = new window.jspdf.jsPDF();
-      doc.text('Reporte de Cobros',10,10);
-      doc.autoTable({head:[['Equipo','Monto','Saldo']], body:cobros.map(c=>[c.equipoNombre||'',c.montoTotal,c.saldo])});
-      doc.save('reporte.pdf');
-    });
+export async function render(){
+  const section=el('section',{class:'stack'});
+  const header=el('div',{class:'stack-sm',style:'flex-direction:row;align-items:center;'},[
+    el('h2',{style:'flex:1;'},'Reportes'),
+    el('button',{class:'btn',id:'exportBtn'},'Exportar PDF')
+  ]);
+  section.appendChild(header);
+  const container=el('div'); section.appendChild(container);
+
+  async function load(){
+    const snap=await getDocs(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros`));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!rows.length){ container.appendChild(emptyState({icon:'picture_as_pdf',title:'Sin datos',body:''})); return []; }
+    renderResponsiveTable(container,{columns:[{key:'equipo',label:'Equipo'},{key:'monto',label:'Monto'}],rows});
+    return rows;
   }
-};
+
+  const rows = await load();
+
+  header.querySelector('#exportBtn').addEventListener('click',()=>exportPDF(rows));
+
+  function exportPDF(rows){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text('Reporte',10,10);
+    doc.autoTable({head:[['Equipo','Monto']], body: rows.map(r=>[r.equipo||'', r.monto||0])});
+    doc.save('reporte.pdf');
+    showToast('success','PDF generado');
+  }
+
+  return section;
+}
