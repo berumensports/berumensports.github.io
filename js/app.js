@@ -21,6 +21,7 @@ const routes = {
   '#/tarifas': () => import('./views/tarifas.js'),
   '#/partidos': () => import('./views/partidos.js'),
   '#/cobros': () => import('./views/cobros.js'),
+  '#/arbitros': () => import('./views/arbitros.js'),
   '#/reportes': () => import('./views/reportes.js'),
   '#/mas': () => import('./views/mas.js'),
 };
