@@ -1,5 +1,6 @@
 import { auth, onAuthChanged, signOut, userRole } from './firebase-ui.js';
 import { qs, showToast } from './ui-kit.js';
+import { enhanceView } from './views/_shared-patches.js';
 
 const routes = {
   '#/': () => import('./views/dashboard.js'),
@@ -28,6 +29,7 @@ async function router() {
   app.innerHTML = '';
   const el = await mod.render();
   app.appendChild(el);
+  enhanceView(app);
   updateTabbar(path);
 }
 
