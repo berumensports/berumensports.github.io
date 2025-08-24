@@ -42,6 +42,7 @@ export default {
       form.addEventListener('submit', async e=>{
         e.preventDefault();
         const data = formDataToObj(form);
+        data.categoria = Number(data.categoria);
         try{
           if(data.id){
             await updateEquipo(data.id,data);
