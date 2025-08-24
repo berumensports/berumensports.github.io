@@ -19,7 +19,7 @@ input,select{padding:.4rem;border:1px solid #ccc;border-radius:.25rem}
 .main{padding:1rem;min-width:0}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{border:1px solid #ddd;padding:.5rem;text-align:left}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:20}
-.modal-overlay.open{display:flex}
-.modal{background:#fff;padding:1rem;max-width:500px;width:90%;border-radius:.5rem}
+
+
+
 html,body{padding-bottom:env(safe-area-inset-bottom)}

@@ -1,3 +1,4 @@
+import { Modal } from './modal-manager.js';
 export const qs = (sel, ctx=document) => ctx.querySelector(sel);
 export const el = (tag, attrs={}, children=[]) => {
   const element = document.createElement(tag);
@@ -24,53 +25,16 @@ export function showToast(type, msg){
 
 export function confirmDialog({title='Confirmar',body='¿Continuar?',confirmText='Aceptar'}){
   return new Promise(res=>{
+    const cancel=el('button',{class:'btn btn-ghost','data-modal-close':''},'Cancelar');
+    const ok=el('button',{class:'btn btn-danger'},confirmText);
     const content=el('div',{class:'stack'},[
       el('p',{},body),
-      el('div',{class:'stack-sm',style:'flex-direction:row;justify-content:flex-end;'},[
-        el('button',{class:'btn btn-ghost',onClick:()=>{closeModal();res(false);}},'Cancelar'),
-        el('button',{class:'btn btn-danger',onClick:()=>{closeModal();res(true);}},confirmText)
-      ])
+      el('div',{class:'stack-sm',style:'flex-direction:row;justify-content:flex-end;'},[cancel,ok])
     ]);
-    openModal(title,content);
+    const id=Modal.open(content,{title});
+    cancel.addEventListener('click',()=>{Modal.close(id);res(false);});
+    ok.addEventListener('click',()=>{Modal.close(id);res(true);});
   });
-}
-
-export function openModal(title,content){
-  const overlay=el('div',{class:'modal-overlay',role:'dialog'},[
-    el('div',{class:'modal'},[
-      el('header',{class:'stack-sm',style:'margin-bottom:8px;'},[
-        el('h2',{},title),
-        el('button',{class:'btn-icon',onClick:closeModal},el('span',{class:'material-symbols-outlined'},'close'))
-      ]),
-      content
-    ])
-  ]);
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click',e=>{if(e.target===overlay) closeModal();});
-  document.addEventListener('keydown', escListener);
-}
-
-export function openSheet(title,content){
-  const overlay=el('div',{class:'modal-overlay'},[
-    el('div',{class:'sheet',role:'dialog'},[
-      el('header',{class:'stack-sm',style:'margin-bottom:8px;'},[
-        el('h2',{},title),
-        el('button',{class:'btn-icon',onClick:closeModal},el('span',{class:'material-symbols-outlined'},'close'))
-      ]),
-      content
-    ])
-  ]);
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click',e=>{if(e.target===overlay) closeModal();});
-  document.addEventListener('keydown', escListener);
-}
-
-function escListener(e){ if(e.key==='Escape') closeModal(); }
-
-export function closeModal(){
-  const overlay = qs('.modal-overlay');
-  if(overlay) overlay.remove();
-  document.removeEventListener('keydown', escListener);
 }
 
 export function renderResponsiveTable(container, config){

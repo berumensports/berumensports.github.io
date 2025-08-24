@@ -92,10 +92,10 @@ html:not(.is-mobile) .sidedrawer nav a:hover{background:rgba(0,0,0,.05);}
 .table-stack .actions{position:absolute;top:8px;right:8px;}
 @media (pointer: fine) and (min-width:768px){html:not(.is-mobile) .table-stack{display:none;} html:not(.is-mobile) table{width:100%;border-collapse:collapse;} html:not(.is-mobile) thead{position:sticky;top:calc(var(--topbar-h));background:var(--card);} html:not(.is-mobile) th,html:not(.is-mobile) td{padding:8px 12px;border-bottom:1px solid var(--border);} html:not(.is-mobile) tbody tr:nth-child(even){background:rgba(0,0,0,.02);} }
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:30;}
-.modal{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);max-width:720px;width:90%;padding:16px;}
-.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:var(--radius);border-top-right-radius:var(--radius);box-shadow:var(--shadow);max-height:calc(var(--vh, 1vh) * 90);overflow:auto;padding:16px;animation:slideUp .2s ease-out;z-index:40;}
-@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+
+
+to{transform:translateY(0);}}
 
 .skeleton{background:linear-gradient(90deg,#e2e8f0,#f8fafc,#e2e8f0);background-size:200% 100%;animation:shimmer 1.2s infinite;}@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
