@@ -33,10 +33,10 @@
 
   /* Sidebar: fija a la izquierda para usuarios autenticados */
   body.auth .sidedrawer{
-    position: sticky !important;
+    position: fixed;
     top: 64px;
     left: 0;
-    width: var(--sidebar-w) !important;
+    width: var(--sidebar-w);
     height: calc(100vh - 64px);
     transform: none !important;
     box-shadow: none !important;
