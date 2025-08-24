@@ -34,7 +34,9 @@ export default {
     if(admin){
       const delegSel = qs('select[name="delegacionId"]', form);
       const delegs = await listDelegaciones();
-      delegSel.innerHTML = delegs.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('');
+      // Add a placeholder option so the browser validation works as expected
+      delegSel.innerHTML = `<option value="" disabled selected>Selecciona una delegación</option>` +
+        delegs.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('');
       qs('#addEquipo', root)?.addEventListener('click',()=>{form.reset();qs('#modalTitle',root).textContent='Nuevo equipo';modal.classList.add('open');});
       qs('#cancelEq', root).addEventListener('click',()=>modal.classList.remove('open'));
       form.addEventListener('submit', async e=>{
