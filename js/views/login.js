@@ -16,7 +16,6 @@ export async function render(){
     setBusy(btn,true);
     try{
       await signInWithEmailAndPassword(auth,data.email,data.password);
-      location.hash = '#/'
     }catch(err){
       showToast('error', err.message);
     }finally{
