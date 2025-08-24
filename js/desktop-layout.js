@@ -5,16 +5,26 @@
   const mq = window.matchMedia('(min-width:768px)');
   const drawer = () => document.querySelector('.sidedrawer');
 
-  function apply(e){
-    document.documentElement.classList.toggle('is-desktop', e.matches);
+  function apply(){
+    const isDesktop = mq.matches;
+    document.documentElement.classList.toggle('is-desktop', isDesktop);
     const d = drawer();
     if(!d) return;
-    if(e.matches){
-      // En pantallas amplias siempre visible (aunque el JS móvil haya puesto hidden)
+    const isAuth = document.body.classList.contains('auth');
+    if(isDesktop && isAuth){
+      // En pantallas amplias la barra lateral debe estar visible
       d.removeAttribute('hidden');
       d.style.display = 'block';
+    } else {
+      // Ocultar para usuarios sin sesión o en pantallas pequeñas
+      d.setAttribute('hidden','');
+      d.style.display = '';
+      d.classList.remove('open');
     }
   }
+
   mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply);
-  apply(mq);
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body,{attributes:true, attributeFilter:['class']});
+  apply();
 })();
