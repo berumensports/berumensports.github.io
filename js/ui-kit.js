@@ -76,7 +76,7 @@ export function closeModal(){
 export function renderResponsiveTable(container, config){
   function render(){
     container.innerHTML='';
-    if(window.innerWidth<768){
+    if(document.documentElement.classList.contains('is-mobile')){
       const list=el('div',{class:'table-stack'});
       config.rows.forEach(row=>{
         const card=el('div',{class:'row','data-id':row.id,'data-name':row.nombre||row.equipo||row.local||''});
@@ -119,7 +119,10 @@ export function renderResponsiveTable(container, config){
     }
   }
   render();
-  window.addEventListener('resize', render, {once:true});
+  if(!container._resizer){
+    container._resizer = () => render();
+    window.addEventListener('resize', container._resizer);
+  }
 }
 
 export function emptyState({icon,title,body,action}){

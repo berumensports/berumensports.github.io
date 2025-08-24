@@ -1,10 +1,11 @@
 /* Desktop layout y densidad (≥1024px) */
 :root{ --sidebar-w: 280px; --gutter: 24px; --container: 1200px; }
-@media (min-width:1024px){
-  .topbar .inner{ max-width: var(--container); margin:0 auto; padding:0 var(--gutter); }
-  .sidedrawer{ position: sticky !important; top:64px; width: var(--sidebar-w) !important; height: calc(100vh - 64px); transform:none !important; display:block !important; }
-  #app{ max-width: var(--container); margin:0 auto; padding: var(--gutter); margin-left: calc(var(--sidebar-w) + var(--gutter)); min-height: calc(100vh - 64px); }
-  .tabbar{ display:none !important; }
-  .btn{ height:36px; padding-inline:14px; } .btn-icon{ width:36px; height:36px; }
-  .card{ padding:16px; }
+@media (pointer: fine) and (min-width:1024px){
+  html:not(.is-mobile) .topbar .inner{ max-width: var(--container); margin:0 auto; padding:0 var(--gutter); }
+  html:not(.is-mobile) .sidedrawer{ position: sticky !important; top:64px; width: var(--sidebar-w) !important; height: calc(var(--vh, 1vh) * 100 - 64px); transform:none !important; display:block !important; }
+  html:not(.is-mobile) #app{ max-width: var(--container); margin:0 auto; padding: var(--gutter); margin-left: calc(var(--sidebar-w) + var(--gutter)); min-height: calc(var(--vh, 1vh) * 100 - 64px); }
+  html:not(.is-mobile) .tabbar{ display:none !important; }
+  html:not(.is-mobile) .btn{ height:36px; padding-inline:14px; }
+  html:not(.is-mobile) .btn-icon{ width:36px; height:36px; }
+  html:not(.is-mobile) .card{ padding:16px; }
 }
