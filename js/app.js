@@ -30,16 +30,23 @@ async function router() {
   const el = await mod.render();
   app.appendChild(el);
   enhanceView(app);
-  updateTabbar(path);
+  updateNav(path);
 }
 
-function updateTabbar(path) {
+function updateNav(path) {
   const tabbar = qs('.tabbar');
-  if (!tabbar) return;
-  const tabs = tabbar.querySelectorAll('a');
-  tabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === path));
-  if (path === '#/login') tabbar.classList.add('hide');
-  else tabbar.classList.remove('hide');
+  const menuBtn = qs('#menu-btn');
+  const drawer = qs('.sidedrawer');
+  const topbarUser = qs('.topbar-user');
+  const isLogin = path === '#/login';
+  if (tabbar) {
+    const tabs = tabbar.querySelectorAll('a');
+    tabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === path));
+    tabbar.classList.toggle('hide', isLogin);
+  }
+  if (menuBtn) menuBtn.classList.toggle('hide', isLogin);
+  if (drawer) drawer.classList.toggle('hide', isLogin);
+  if (topbarUser) topbarUser.classList.toggle('hide', isLogin);
 }
 
 function initMenu() {

@@ -53,6 +53,7 @@ img{max-width:100%;display:block;}
 .topbar-user{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .topbar-user .truncate{max-width:120px;}
 @media(max-width:480px){.topbar-user .truncate{display:none;}}
+body:not(.auth) #menu-btn,body:not(.auth) .topbar-user,body:not(.auth) .sidedrawer,body:not(.auth) .tabbar{display:none!important;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 16px;height:36px;border-radius:8px;border:1px solid transparent;background:var(--primary);color:#fff;font-weight:500;cursor:pointer;transition:background .16s,transform .16s,box-shadow .16s;}
 .btn:hover{background:var(--primary-600);}
 .btn:disabled{opacity:.5;pointer-events:none;}
