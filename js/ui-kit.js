@@ -84,13 +84,36 @@ export function renderResponsiveTable(container, config){
           const v=col.format?col.format(row[col.key]):row[col.key];
           card.appendChild(el('div',{},[el('strong',{},col.label+': '), el('span',{},v)]));
         });
+        if(config.actions){
+          const act=el('div',{class:'actions'});
+          config.actions.forEach(a=>{
+            act.appendChild(el('button',{class:'btn-icon',title:a.label,onClick:()=>a.onClick(row)},el('span',{class:'material-symbols-outlined'},a.icon)));
+          });
+          card.appendChild(act);
+        }
         list.appendChild(card);
       });
       container.appendChild(list);
     }else{
+      const cols=[...config.columns];
+      if(config.actions) cols.push({key:'__actions',label:''});
       const table=el('table',{},[
-        el('thead',{},el('tr',{},config.columns.map(c=>el('th',{},c.label)))),
-        el('tbody',{},config.rows.map(row=>el('tr',{},config.columns.map(c=>el('td',{},(c.format?c.format(row[c.key]):row[c.key]))))))
+        el('thead',{},el('tr',{},cols.map(c=>el('th',{},c.label)))),
+        el('tbody',{},config.rows.map(row=>{
+          const tds=cols.map(c=>{
+            if(c.key==='__actions'){
+              const td=el('td',{});
+              const act=el('div',{class:'actions'});
+              config.actions.forEach(a=>{
+                act.appendChild(el('button',{class:'btn-icon',title:a.label,onClick:()=>a.onClick(row)},el('span',{class:'material-symbols-outlined'},a.icon)));
+              });
+              td.appendChild(act);
+              return td;
+            }
+            return el('td',{},(c.format?c.format(row[c.key]):row[c.key]));
+          });
+          return el('tr',{},tds);
+        }))
       ]);
       container.appendChild(table);
     }
