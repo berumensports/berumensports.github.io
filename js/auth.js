@@ -48,10 +48,13 @@ export function watchAuth(cb) {
   return onAuthStateChanged(auth, async (user) => {
     let profile = null;
     if (user) {
-      await ensureTemporada();
       await ensureUserProfile(user);
-      const snap = await getDoc(doc(db, `ligas/${LIGA_ID}/usuarios/${user.uid}`));
+      const userRef = doc(db, `ligas/${LIGA_ID}/usuarios/${user.uid}`);
+      const snap = await getDoc(userRef);
       profile = snap.data();
+      if (profile?.role === 'admin') {
+        await ensureTemporada();
+      }
     }
     currentProfile = profile;
     cb(user, profile);
