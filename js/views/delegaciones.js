@@ -1,63 +1,46 @@
-import { listDelegaciones, create as createDelegacion, update as updateDelegacion, remove as deleteDelegacion } from "../data/delegaciones.js";
-import { currentProfile } from "../auth.js";
-import { qs, on, formDataToObj } from "../utils.js";
+import { db, collection, getDocs, addDoc } from '../firebase-ui.js';
+import { el, renderResponsiveTable, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { LIGA_ID } from '../constants.js';
 
-export default {
-  title: 'Delegaciones',
-  async render(root) {
-    const admin = currentProfile?.role === 'admin';
-    let delegaciones = await listDelegaciones();
-    root.innerHTML = `
-      <h2>Delegaciones</h2>
-      ${admin ? '<button id="addDel" class="btn">Nueva</button>' : ''}
-      <table class="table"><thead><tr><th>Nombre</th>${admin?'<th></th>':''}</tr></thead><tbody id="tbody"></tbody></table>
-      <div id="modalDel" class="modal-overlay"><div class="modal"><form id="formDel">
-        <h3 id="modalTitle">Delegación</h3>
-        <input type="hidden" name="id" />
-        <label>Nombre<input name="nombre" required></label>
-        <div class="gap"><button class="btn" type="submit">Guardar</button><button type="button" class="btn" id="cancelDel">Cancelar</button></div>
-      </form></div></div>`;
-    const tbody = qs('#tbody', root);
-    const modal = qs('#modalDel', root);
-    const form = qs('#formDel', root);
+export async function render(){
+  const section = el('section',{class:'stack'});
+  const header = el('div',{class:'stack-sm',style:'flex-direction:row;align-items:center;'},[
+    el('h2',{style:'flex:1;'},'Delegaciones'),
+    el('button',{class:'btn',id:'newBtn'},'Nueva')
+  ]);
+  section.appendChild(header);
+  const container = el('div');
+  section.appendChild(container);
 
-    function renderTable(){
-      tbody.innerHTML = delegaciones.map(d=>`<tr><td>${d.nombre}</td>${admin?`<td><button class='edit btn' data-id='${d.id}'>Editar</button><button class='del btn' data-id='${d.id}'>Borrar</button></td>`:''}</tr>`).join('');
+  async function load(){
+    const snap = await getDocs(collection(db,`ligas/${LIGA_ID}/delegaciones`));
+    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(rows.length===0){
+      container.innerHTML='';
+      container.appendChild(emptyState({icon:'domain',title:'Sin delegaciones',body:'No hay registros',action:{label:'Crear',onClick:openNew}}));
+      return;
     }
-    renderTable();
-
-    if(admin){
-      qs('#addDel', root)?.addEventListener('click',()=>{form.reset();qs('#modalTitle',root).textContent='Nueva delegación';modal.classList.add('open');});
-      qs('#cancelDel', root).addEventListener('click',()=>modal.classList.remove('open'));
-      form.addEventListener('submit', async e=>{
-        e.preventDefault();
-        const data = formDataToObj(form);
-        try{
-          if(data.id){
-            await updateDelegacion(data.id,data);
-            const idx = delegaciones.findIndex(x=>x.id===data.id); if(idx>-1) delegaciones[idx] = {...delegaciones[idx], ...data};
-          }else{
-            const ref = await createDelegacion(data);
-            delegaciones.push({...data, id: ref.id});
-          }
-          renderTable();
-          modal.classList.remove('open');
-        }catch(err){alert(err.message);}
-      });
-      on(tbody,'click','.del',async e=>{
-        const id = e.target.dataset.id;
-        if(confirm('¿Borrar?')){ await deleteDelegacion(id); delegaciones = delegaciones.filter(x=>x.id!==id); renderTable(); }
-      });
-      on(tbody,'click','.edit',e=>{
-        const id = e.target.dataset.id;
-        const d = delegaciones.find(x=>x.id===id);
-        if(d){
-          form.id.value=id;
-          form.nombre.value=d.nombre;
-          qs('#modalTitle',root).textContent='Editar delegación';
-          modal.classList.add('open');
-        }
-      });
-    }
+    renderResponsiveTable(container,{columns:[{key:'nombre',label:'Nombre'}],rows});
   }
-};
+
+  function openNew(){
+    const form = el('form',{class:'stack'},[
+      el('label',{},['Nombre', el('input',{class:'input',name:'nombre',required:true})]),
+      el('button',{class:'btn btn-primary',type:'submit'},'Guardar')
+    ]);
+    form.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const data=readForm(form);
+      const btn=form.querySelector('button');
+      setBusy(btn,true);
+      try{ await addDoc(collection(db,`ligas/${LIGA_ID}/delegaciones`), data); closeModal(); load(); showToast('success','Guardado'); }
+      catch(err){ showToast('error',err.message); }
+      finally{ setBusy(btn,false); }
+    });
+    openSheet('Nueva delegación',form);
+  }
+
+  header.querySelector('#newBtn').addEventListener('click',openNew);
+  await load();
+  return section;
+}
