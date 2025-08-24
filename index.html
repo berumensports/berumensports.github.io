@@ -7,6 +7,8 @@
   <title>Berumen Sports • Liga 2025</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link rel="stylesheet" href="./css/berumen.css" />
+  <link rel="stylesheet" href="./css/berumen-theme.css">
+  <link rel="stylesheet" href="./css/berumen-desktop.css">
 </head>
 <body>
   <header class="topbar">
@@ -45,6 +47,14 @@
   <div id="modal-root"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" src="./js/theme-toggle.js"></script>
+  <script type="module">
+    import { enhanceView } from './js/ui-apply.js';
+    const app = document.getElementById('app');
+    function patch(){ enhanceView(app); }
+    window.addEventListener('hashchange', patch);
+    document.addEventListener('DOMContentLoaded', patch);
+  </script>
   <script type="module" src="./js/app.js"></script>
   <noscript>Necesitas habilitar JavaScript para usar esta aplicación.</noscript>
 </body>
