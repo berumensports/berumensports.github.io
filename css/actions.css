@@ -11,10 +11,12 @@
 }
 html:not(.is-mobile) .action-btn:hover { background: color-mix(in srgb, var(--surface, #fff) 88%, #000 12%); }
 .action-btn:active { transform: translateY(1px); }
+.action-btn:focus-visible { outline:2px solid var(--ring, #3b82f6); outline-offset:2px; }
 .action-btn--edit { color:#2563eb; border-color: color-mix(in srgb, #2563eb 30%, var(--bd)); }
 .action-btn--delete { color:#ef4444; border-color: color-mix(in srgb, #ef4444 30%, var(--bd)); }
 .action-btn[disabled] { opacity:.5; cursor:not-allowed; }
 .actions--card { justify-content:flex-end; margin-top:8px; }
+html.is-mobile .action-btn { height:44px; width:44px; }
 /* en tablas, agrega una columna Acciones (desktop) */
 @media (pointer: fine) and (min-width:768px){
   html:not(.is-mobile) th.th-actions { width: 120px; text-align:right; }
