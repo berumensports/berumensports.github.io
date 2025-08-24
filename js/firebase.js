@@ -52,7 +52,7 @@ export async function runDiag() {
   } else {
     console.log("Sin usuario autenticado");
   }
-  const tempDoc = await getDoc(doc(db, `ligas/${LIGA_ID}/temporada`));
+  const tempDoc = await getDoc(doc(db, `ligas/${LIGA_ID}/temporada/${TEMP_ID}`));
   console.log("Temporada existe:", tempDoc.exists());
   const delegaciones = await getCountFromServer(collection(db, `ligas/${LIGA_ID}/delegaciones`));
   const equipos = await getCountFromServer(collection(db, `ligas/${LIGA_ID}/equipos`));
