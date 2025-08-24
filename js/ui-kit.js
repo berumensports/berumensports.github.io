@@ -8,7 +8,7 @@ export const el = (tag, attrs={}, children=[]) => {
   });
   (Array.isArray(children)?children:[children]).forEach(c => {
     if(c==null) return;
-    if(typeof c === 'string') element.appendChild(document.createTextNode(c));
+    if(typeof c === 'string' || typeof c === 'number') element.appendChild(document.createTextNode(c));
     else element.appendChild(c);
   });
   return element;
