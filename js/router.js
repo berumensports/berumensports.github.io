@@ -2,6 +2,7 @@ import { auth } from "./firebase.js";
 import loginView from "./views/login.js";
 import registerView from "./views/register.js";
 import dashboardView from "./views/dashboard.js";
+import delegacionesView from "./views/delegaciones.js";
 import equiposView from "./views/equipos.js";
 import tarifasView from "./views/tarifas.js";
 import partidosView from "./views/partidos.js";
@@ -12,6 +13,7 @@ const routes = {
   '/login': loginView,
   '/register': registerView,
   '/': dashboardView,
+  '/delegaciones': delegacionesView,
   '/equipos': equiposView,
   '/tarifas': tarifasView,
   '/partidos': partidosView,
