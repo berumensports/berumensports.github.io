@@ -65,13 +65,12 @@ function initMenu() {
   });
 
   // Cierra al dar click fuera del menú
-  document.addEventListener('click', (e) => {
-    if (document.documentElement.classList.contains('is-desktop')) return;
-    if (!drawer.classList.contains('open')) return;
-    if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
-      closeDrawer();
-    }
-  });
+    document.addEventListener('click', (e) => {
+      if (!drawer.classList.contains('open')) return;
+      if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
+        closeDrawer();
+      }
+    });
 
   // Cierra al navegar
   drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
