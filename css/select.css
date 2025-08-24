@@ -1,0 +1,8 @@
+.combobox{position:relative;}
+.combobox .cb-list{position:absolute;z-index:1000;background:var(--surface);border:1px solid #ccc;width:100%;max-height:200px;overflow:auto;margin-top:4px;padding:0;list-style:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+.combobox .cb-list li{padding:8px;cursor:pointer;}
+.combobox .cb-list li:hover{background:var(--surface-hover,#eee);}
+.combobox .cb-list li[hidden]{display:none;}
+.combobox .cb-loading,
+.combobox .cb-empty,
+.combobox .cb-error{padding:8px;color:#666;}
