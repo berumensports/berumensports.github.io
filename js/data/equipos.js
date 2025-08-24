@@ -15,11 +15,13 @@ export async function createEquipo(data){
   data.ligaId = LIGA_ID;
   data.creadoEn = serverTimestamp();
   data.actualizadoEn = serverTimestamp();
+  data.categoria = Number(data.categoria);
   const ref = await addDoc(collection(db, L('/equipos')), data);
   return ref;
 }
 export async function updateEquipo(id,data){
   data.actualizadoEn = serverTimestamp();
+  data.categoria = Number(data.categoria);
   await updateDoc(doc(db,L(`/equipos/${id}`)), data);
 }
 export async function deleteEquipo(id){
