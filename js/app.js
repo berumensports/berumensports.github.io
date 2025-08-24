@@ -44,10 +44,30 @@ function updateTabbar(path) {
 
 function initMenu() {
   const drawer = qs('.sidedrawer');
-  qs('#menu-btn').addEventListener('click', () => {
+  const menuBtn = qs('#menu-btn');
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawer.hidden = true;
+  }
+
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     drawer.classList.toggle('open');
     drawer.hidden = !drawer.classList.contains('open');
   });
+
+  // Cierra al dar click fuera del menú
+  document.addEventListener('click', (e) => {
+    if (document.documentElement.classList.contains('is-desktop')) return;
+    if (!drawer.classList.contains('open')) return;
+    if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
+      closeDrawer();
+    }
+  });
+
+  // Cierra al navegar
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
 }
 
 function initLogout() {
