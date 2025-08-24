@@ -11,6 +11,7 @@ const routes = {
   '#/partidos': () => import('./views/partidos.js'),
   '#/cobros': () => import('./views/cobros.js'),
   '#/reportes': () => import('./views/reportes.js'),
+  '#/mas': () => import('./views/mas.js'),
 };
 
 async function router() {
@@ -20,11 +21,12 @@ async function router() {
     location.hash = path;
   }
   const load = routes[path];
-  const app = qs('#app');
   if (!load) {
-    app.textContent = 'Ruta no encontrada';
+    showToast('error', 'Sección no encontrada');
+    location.hash = '#/';
     return;
   }
+  const app = qs('#app');
   const mod = await load();
   app.innerHTML = '';
   const el = await mod.render();
@@ -40,13 +42,52 @@ function updateNav(path) {
   const topbarUser = qs('.topbar-user');
   const isLogin = path === '#/login';
   if (tabbar) {
-    const tabs = tabbar.querySelectorAll('a');
-    tabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === path));
+    const tabs = Array.from(tabbar.querySelectorAll('.tab'));
+    tabs.forEach(t => {
+      const active = t.getAttribute('href') === path;
+      t.setAttribute('aria-selected', active);
+      t.tabIndex = active ? 0 : -1;
+    });
     tabbar.classList.toggle('hide', isLogin);
+    tabbar.classList.remove('disabled');
   }
   if (menuBtn) menuBtn.classList.toggle('hide', isLogin);
   if (drawer) drawer.classList.toggle('hide', isLogin);
   if (topbarUser) topbarUser.classList.toggle('hide', isLogin);
+}
+
+function initTabbar() {
+  const tabbar = qs('.tabbar');
+  if (!tabbar) return;
+  const tabs = Array.from(tabbar.querySelectorAll('.tab'));
+  tabs.forEach((t,i)=> t.tabIndex = i===0 ? 0 : -1);
+
+  tabbar.addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    e.preventDefault();
+    if (tab.getAttribute('aria-selected') === 'true') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    tabbar.classList.add('disabled');
+    location.hash = tab.getAttribute('href');
+  });
+
+  tabbar.addEventListener('keydown', (e) => {
+    const current = document.activeElement.closest('.tab');
+    const idx = tabs.indexOf(current);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      let next = e.key === 'ArrowRight' ? idx + 1 : idx - 1;
+      if (next < 0) next = tabs.length - 1;
+      if (next >= tabs.length) next = 0;
+      tabs[next].focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      current?.click();
+    }
+  });
 }
 
 function initMenu() {
@@ -106,4 +147,5 @@ window.addEventListener('hashchange', router);
 
 initMenu();
 initLogout();
+initTabbar();
 router();

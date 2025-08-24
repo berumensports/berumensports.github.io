@@ -64,7 +64,7 @@ p, label, th, td, input, select, button, small { color: var(--text); }
 .sidedrawer { background: var(--surface); border-right:1px solid var(--border); }
 .tabbar { background: var(--surface); border-top:1px solid var(--border); }
 .tabbar .tab { color: var(--muted); }
-.tabbar .tab[aria-current="page"] { color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+.tabbar .tab[aria-selected="true"] { color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
 
 /* Botones */
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--border); background: var(--surface); color: var(--text); transition: .16s ease; }
