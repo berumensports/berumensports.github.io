@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="./img/favicon.ico" />
+  <title>Berumen Sports • Liga 2025</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="hidden" id="app">
+  <header class="topbar">
+    <button id="menuBtn" class="btn">☰</button>
+    <h1 class="title">Berumen Sports • Liga 2025</h1>
+    <nav id="breadcrumb" class="breadcrumb"></nav>
+    <div class="spacer"></div>
+    <span id="userRole" class="badge"></span>
+    <span id="userEmail" class="truncate"></span>
+    <button id="logoutBtn" class="btn logout">Salir</button>
+  </header>
+  <aside id="sidebar" class="sidebar">
+    <nav>
+      <a href="#/">Dashboard</a>
+      <a href="#/equipos">Equipos</a>
+      <a href="#/tarifas">Tarifas</a>
+      <a href="#/partidos">Partidos</a>
+      <a href="#/cobros">Cobros</a>
+      <a href="#/reportes">Reportes</a>
+    </nav>
+  </aside>
+  <main id="main" class="main"></main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  </script>
+  <script type="module" src="./js/main.js"></script>
+  <noscript>Necesitas habilitar JavaScript para usar esta aplicación.</noscript>
+</body>
+</html>

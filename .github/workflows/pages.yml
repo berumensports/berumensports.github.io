@@ -1,0 +1,22 @@
+name: Deploy Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify
+        run: |
+          test -f index.html
+          grep -q "initializeApp(" js/firebase.js
+          grep -q "berumen-sports" js/firebase.js
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: .
+      - uses: actions/deploy-pages@v4

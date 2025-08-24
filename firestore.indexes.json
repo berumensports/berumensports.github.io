@@ -1,0 +1,35 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "equipos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "delegacionId", "order": "ASCENDING"},
+        {"fieldPath": "rama", "order": "ASCENDING"},
+        {"fieldPath": "categoria", "order": "ASCENDING"},
+        {"fieldPath": "estatus", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "partidos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "delegacionId", "order": "ASCENDING"},
+        {"fieldPath": "rama", "order": "ASCENDING"},
+        {"fieldPath": "categoria", "order": "ASCENDING"},
+        {"fieldPath": "fecha", "order": "DESCENDING"},
+        {"fieldPath": "estado", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "cobros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "delegacionId", "order": "ASCENDING"},
+        {"fieldPath": "estatus", "order": "ASCENDING"},
+        {"fieldPath": "fechaEmision", "order": "DESCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

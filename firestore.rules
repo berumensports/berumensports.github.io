@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return get(/databases/$(database)/documents/ligas/BERUMEN/usuarios/$(request.auth.uid)).data.role == 'admin'; }
+
+    match /ligas/BERUMEN {      
+      allow read: if isSignedIn();
+      match /usuarios/{uid} {
+        allow read: if isSignedIn();
+        allow create: if request.auth.uid == uid && request.resource.data.role == 'consulta';
+        allow update, delete: if false;
+      }
+      match /delegaciones/{id} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN';
+      }
+      match /equipos/{id} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.categoria >= 2009 && request.resource.data.categoria <= 2020;
+      }
+      match /temporada {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
+      match /t/2025 {
+        allow read: if isSignedIn();
+        match /tarifas/{tid} {
+          allow read: if isSignedIn();
+          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
+        }
+        match /partidos/{pid} {
+          allow read: if isSignedIn();
+          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
+        }
+        match /cobros/{cid} {
+          allow read: if isSignedIn();
+          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
+          match /abonos/{aid} {
+            allow read: if isSignedIn();
+            allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025' && request.resource.data.monto > 0;
+          }
+        }
+      }
+    }
+  }
+}
