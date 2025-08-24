@@ -1,6 +1,17 @@
-import { auth, onAuthChanged, signOut, userRole } from './firebase-ui.js';
+import { auth, onAuthChanged, signOut, userRole, ensureUserProfile, ensureTemporada } from './firebase-ui.js';
 import { qs, showToast } from './ui-kit.js';
 import { enhanceView } from './views/_shared-patches.js';
+
+const AUTH = {
+  UNKNOWN: 'desconocido',
+  AUTHENTICATED: 'autenticado',
+  NOT_AUTHENTICATED: 'noAutenticado'
+};
+
+let authState = AUTH.UNKNOWN;
+let routerLocked = true;
+const app = qs('#app');
+app.innerHTML = '<p class="loading">Cargando...</p>';
 
 const routes = {
   '#/': () => import('./views/dashboard.js'),
@@ -14,11 +25,27 @@ const routes = {
   '#/mas': () => import('./views/mas.js'),
 };
 
+function getSavedRoute() {
+  const r = localStorage.getItem('lastRoute');
+  return r && r !== '#/login' && routes[r] ? r : '#/';
+}
+
 async function router() {
+  if (authState === AUTH.UNKNOWN) return;
   let path = location.hash || '#/';
-  if (!auth.currentUser && path !== '#/login') {
-    path = '#/login';
-    location.hash = path;
+  if (authState === AUTH.NOT_AUTHENTICATED) {
+    if (path !== '#/login') {
+      location.hash = '#/login';
+      return;
+    }
+  } else if (authState === AUTH.AUTHENTICATED) {
+    if (path === '#/login') {
+      const target = getSavedRoute();
+      if (target !== path) {
+        location.hash = target;
+        return;
+      }
+    }
   }
   const load = routes[path];
   if (!load) {
@@ -26,7 +53,6 @@ async function router() {
     location.hash = '#/';
     return;
   }
-  const app = qs('#app');
   const mod = await load();
   app.innerHTML = '';
   const el = await mod.render();
@@ -126,26 +152,37 @@ function initLogout() {
 }
 
 onAuthChanged(async (user) => {
-  document.body.classList.toggle('auth', !!user);
   const roleEl = qs('#user-role');
   const emailEl = qs('#user-email');
   if (user) {
+    await ensureUserProfile();
+    await ensureTemporada();
+    authState = AUTH.AUTHENTICATED;
     emailEl.textContent = user.email || '';
     const role = await userRole();
     roleEl.textContent = role;
     roleEl.classList.add(role);
-    router();
   } else {
+    authState = AUTH.NOT_AUTHENTICATED;
     emailEl.textContent = '';
     roleEl.textContent = '';
     roleEl.className = 'badge';
+  }
+  document.body.classList.toggle('auth', authState === AUTH.AUTHENTICATED);
+  routerLocked = false;
+  const target = authState === AUTH.AUTHENTICATED ? getSavedRoute() : '#/login';
+  if (location.hash !== target) {
+    location.hash = target;
+  } else {
     router();
   }
 });
 
-window.addEventListener('hashchange', router);
+window.addEventListener('hashchange', () => {
+  localStorage.setItem('lastRoute', location.hash);
+  if (!routerLocked) router();
+});
 
 initMenu();
 initLogout();
 initTabbar();
-router();

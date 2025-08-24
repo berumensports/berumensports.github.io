@@ -4,7 +4,9 @@ import {
   onAuthStateChanged,
   signOut as fbSignOut,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   getFirestore,
@@ -32,6 +34,8 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+// Persist authentication between tabs and reloads
+setPersistence(auth, browserLocalPersistence);
 export const db = getFirestore(app);
 
 export const signOut = () => fbSignOut(auth);
