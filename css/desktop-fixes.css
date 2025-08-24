@@ -6,17 +6,19 @@
 }
 @media (min-width:768px){
 
-  /* Topbar: centrada y con ancho máximo */
+  /* Topbar: alineada con el contenido y con ancho máximo */
   .topbar{
     position: sticky;
     top: 0;
     height: 64px;
     backdrop-filter: saturate(140%) blur(8px);
     z-index: 50;
+    padding: 0;
   }
   .topbar .inner{
     max-width: var(--page-max);
-    margin: 0 auto;
+    margin-left: calc(var(--sidebar-w) + var(--gutter));
+    margin-right: var(--gutter);
     padding-inline: var(--gutter);
     display: grid;
     grid-template-columns: 1fr auto auto;
