@@ -3,6 +3,7 @@ import { db, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } fr
 import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID } from '../constants.js';
+import { createFirestoreSelect, createStaticSelect } from '../combobox.js';
 
 export async function render(){
   const section = el('section',{class:'stack'});
@@ -15,14 +16,26 @@ export async function render(){
   section.appendChild(container);
 
   async function load(){
-    const snap = await getDocs(collection(db,`ligas/${LIGA_ID}/equipos`));
-    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const [equipSnap, delegSnap] = await Promise.all([
+      getDocs(collection(db,`ligas/${LIGA_ID}/equipos`)),
+      getDocs(collection(db,`ligas/${LIGA_ID}/delegaciones`))
+    ]);
+    const delegMap = Object.fromEntries(delegSnap.docs.map(d=>[d.id,d.data().nombre]));
+    const rows = equipSnap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){
       container.innerHTML='';
       container.appendChild(emptyState({icon:'groups',title:'Sin equipos',body:'',action:{label:'Crear',onClick:openNew}}));
       return;
     }
-    renderResponsiveTable(container,{columns:[{key:'nombre',label:'Nombre'},{key:'delegacion',label:'Delegación'}],rows});
+    renderResponsiveTable(container,{
+      columns:[
+        {key:'nombre',label:'Nombre'},
+        {key:'delegacionId',label:'Delegación',format:v=>delegMap[v]||''},
+        {key:'rama',label:'Rama'},
+        {key:'categoria',label:'Categoría'}
+      ],
+      rows
+    });
     injectRowActions({
       root: container,
       rowSelector: 'tbody tr[data-id], .table-stack .row[data-id]',
@@ -32,9 +45,35 @@ export async function render(){
   }
 
   function openForm(row){
+    const delegacionSel = createFirestoreSelect({
+      name:'delegacionId',
+      placeholder:'Delegación',
+      collectionPath:`ligas/${LIGA_ID}/delegaciones`,
+      cacheKey:'delegaciones',
+      selectedId:row?.delegacionId
+    });
+    const ramaSel = createStaticSelect({
+      name:'rama',
+      placeholder:'Rama',
+      options:[
+        {id:'Varonil',label:'Varonil'},
+        {id:'Femenil',label:'Femenil'}
+      ],
+      selectedId:row?.rama
+    });
+    const catOptions = [];
+    for(let y=2009;y<=2020;y++) catOptions.push({id:String(y),label:String(y)});
+    const catSel = createStaticSelect({
+      name:'categoria',
+      placeholder:'Categoría',
+      options:catOptions,
+      selectedId:row?.categoria
+    });
     const form = el('form',{class:'stack'},[
       el('label',{},['Nombre', el('input',{class:'input',name:'nombre',required:true,value:row?.nombre||''})]),
-      el('label',{},['Delegación', el('input',{class:'input',name:'delegacion',required:true,value:row?.delegacion||''})]),
+      el('label',{},['Delegación', delegacionSel]),
+      el('label',{},['Rama', ramaSel]),
+      el('label',{},['Categoría', catSel]),
       el('button',{class:'btn btn-primary',type:'submit'},'Guardar')
     ]);
     form.addEventListener('submit', async e=>{
