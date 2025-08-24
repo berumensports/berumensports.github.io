@@ -40,16 +40,16 @@
     z-index: 40;
     display: block !important; /* forzar visible aunque JS ponga hidden en móvil */
   }
-  .sidedrawer .nav{
+  .sidedrawer nav{
     padding: 12px;
   }
 
   /* Contenido: ancho máximo, centrado, con margen izquierdo para sidebar */
   #app{
     max-width: var(--page-max);
-    margin: 0 auto;
-    padding: var(--gutter);
     margin-left: calc(var(--sidebar-w) + var(--gutter));
+    margin-right: var(--gutter);
+    padding: var(--gutter);
     min-height: calc(100vh - 64px);
   }
 
