@@ -5,6 +5,18 @@ const listeners = {open:[], afterOpen:[], beforeClose:[], afterClose:[]};
 let initialized=false;
 let lastTrigger=null;
 
+function applyEnv(){
+  const root=document.documentElement;
+  const coarse=matchMedia('(pointer: coarse)').matches;
+  const touch=navigator.maxTouchPoints>=1;
+  const fine=matchMedia('(pointer: fine)').matches;
+  const desktop=fine && window.innerWidth>=1024 && !coarse && !touch;
+  root.classList.toggle('is-mobile', !desktop);
+  root.style.setProperty('--vh', `${window.innerHeight*0.01}px`);
+}
+
+['resize','orientationchange'].forEach(ev=>window.addEventListener(ev,applyEnv));
+
 function emit(ev, detail){ (listeners[ev]||[]).forEach(fn=>fn(detail)); }
 
 function lockScroll(){ const y=window.scrollY; document.body.dataset.modalScrollY=y; document.body.style.top=`-${y}px`; document.body.classList.add('modal-lock'); }
@@ -63,7 +75,20 @@ function setContent(id, html){ const m=stack.find(x=>x.id===id); if(!m) return; 
 
 function on(ev,handler){ if(listeners[ev]) listeners[ev].push(handler); }
 
-function init(){ if(initialized) return; document.addEventListener('click',e=>{ const openBtn=e.target.closest('[data-modal-open]'); if(openBtn){ e.preventDefault(); lastTrigger=openBtn; open(openBtn.getAttribute('data-modal-open'),{trigger:openBtn}); return;} const sheetBtn=e.target.closest('[data-modal-sheet]'); if(sheetBtn){ e.preventDefault(); lastTrigger=sheetBtn; sheet(sheetBtn.getAttribute('data-modal-sheet'),{trigger:sheetBtn}); return;} const closeBtn=e.target.closest('[data-modal-close]'); if(closeBtn){ e.preventDefault(); const ov=closeBtn.closest('.modal-overlay'); close(ov?.dataset.modalId); } }); initialized=true; }
+function init(){
+  if(initialized) return;
+  applyEnv();
+  document.addEventListener('click',e=>{
+    const openBtn=e.target.closest('[data-modal-open]');
+    if(openBtn){ e.preventDefault(); lastTrigger=openBtn; open(openBtn.getAttribute('data-modal-open'),{trigger:openBtn}); return; }
+    const sheetBtn=e.target.closest('[data-modal-sheet]');
+    if(sheetBtn){ e.preventDefault(); lastTrigger=sheetBtn; sheet(sheetBtn.getAttribute('data-modal-sheet'),{trigger:sheetBtn}); return; }
+    const closeBtn=e.target.closest('[data-modal-close]');
+    if(closeBtn){ e.preventDefault(); const ov=closeBtn.closest('.modal-overlay'); close(ov?.dataset.modalId); }
+  });
+  window.addEventListener('hashchange', closeAll);
+  initialized=true;
+}
 
 window.__MODAL_DEBUG__ = { openStack: stack, lastTrigger: ()=>lastTrigger };
 

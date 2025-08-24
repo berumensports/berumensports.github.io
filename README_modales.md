@@ -42,3 +42,8 @@ Los modales deben existir como `<template>` o `<div data-modal-id="...">` para s
 - Evita listeners duplicados; `Modal.init()` es idempotente.
 - Usa tokens de diseño (`--surface`, `--text`, etc.) para estilos internos.
 - Recuerda que todos los modales se cierran al cambiar de ruta o cerrar sesión.
+
+## Notas de migración
+- Se eliminaron reglas que fijaban el contenido del modal con `position:fixed` a pantalla completa; ahora solo el overlay es fijo y el cuerpo usa límites (`max-width`/`max-height`) con scroll interno.
+- Las alturas basadas en `100vh` se reemplazaron por `--vh` calculado en tiempo real para evitar desbordes en iOS/iPadOS y al mostrar el teclado.
+- Se normalizaron los `z-index` globales para garantizar que el overlay del modal siempre quede sobre topbar, tabbar y drawer sin valores arbitrarios.

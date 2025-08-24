@@ -3,21 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <script>
-    (function () {
-      const root = document.documentElement;
-      function apply() {
-        const coarse = matchMedia('(pointer: coarse)').matches;
-        const touch = navigator.maxTouchPoints >= 1;
-        const fine = matchMedia('(pointer: fine)').matches;
-        const desktop = fine && window.innerWidth >= 1024 && !coarse && !touch;
-        root.classList.toggle('is-mobile', !desktop);
-        root.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-      }
-      ['resize', 'orientationchange'].forEach(ev => window.addEventListener(ev, apply));
-      apply();
-    })();
-  </script>
   <link rel="icon" href="./img/favicon.ico" />
   <title>Berumen Sports • Liga 2025</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600" />
