@@ -79,7 +79,7 @@ export function renderResponsiveTable(container, config){
     if(window.innerWidth<768){
       const list=el('div',{class:'table-stack'});
       config.rows.forEach(row=>{
-        const card=el('div',{class:'row'});
+        const card=el('div',{class:'row','data-id':row.id,'data-name':row.nombre||row.equipo||row.local||''});
         config.columns.forEach(col=>{
           const v=col.format?col.format(row[col.key]):row[col.key];
           card.appendChild(el('div',{},[el('strong',{},col.label+': '), el('span',{},v)]));
@@ -112,7 +112,7 @@ export function renderResponsiveTable(container, config){
             }
             return el('td',{},(c.format?c.format(row[c.key]):row[c.key]));
           });
-          return el('tr',{},tds);
+          return el('tr',{'data-id':row.id,'data-name':row.nombre||row.equipo||row.local||''},tds);
         }))
       ]);
       container.appendChild(table);

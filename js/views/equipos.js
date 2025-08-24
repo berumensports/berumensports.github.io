@@ -1,5 +1,6 @@
-import { db, collection, getDocs, addDoc } from '../firebase-ui.js';
+import { db, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from '../firebase-ui.js';
 import { el, renderResponsiveTable, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID } from '../constants.js';
 
 export async function render(){
@@ -21,12 +22,18 @@ export async function render(){
       return;
     }
     renderResponsiveTable(container,{columns:[{key:'nombre',label:'Nombre'},{key:'delegacion',label:'Delegación'}],rows});
+    injectRowActions({
+      root: container,
+      rowSelector: 'tbody tr[data-id], .table-stack .row[data-id]',
+      onEdit: ({id})=>openEdit(id),
+      onDelete: ({id})=>remove(id)
+    });
   }
 
-  function openNew(){
+  function openForm(row){
     const form = el('form',{class:'stack'},[
-      el('label',{},['Nombre', el('input',{class:'input',name:'nombre',required:true})]),
-      el('label',{},['Delegación', el('input',{class:'input',name:'delegacion',required:true})]),
+      el('label',{},['Nombre', el('input',{class:'input',name:'nombre',required:true,value:row?.nombre||''})]),
+      el('label',{},['Delegación', el('input',{class:'input',name:'delegacion',required:true,value:row?.delegacion||''})]),
       el('button',{class:'btn btn-primary',type:'submit'},'Guardar')
     ]);
     form.addEventListener('submit', async e=>{
@@ -34,11 +41,26 @@ export async function render(){
       const data=readForm(form);
       const btn=form.querySelector('button');
       setBusy(btn,true);
-      try{ await addDoc(collection(db,`ligas/${LIGA_ID}/equipos`), data); closeModal(); load(); showToast('success','Guardado'); }
-      catch(err){ showToast('error',err.message); }
+      try{
+        if(row){ await updateDoc(doc(db,`ligas/${LIGA_ID}/equipos/${row.id}`), data); }
+        else{ await addDoc(collection(db,`ligas/${LIGA_ID}/equipos`), data); }
+        closeModal(); load(); showToast('success','Guardado');
+      }catch(err){ showToast('error',err.message); }
       finally{ setBusy(btn,false); }
     });
-    openSheet('Nuevo equipo',form);
+    openSheet(row?'Editar equipo':'Nuevo equipo',form);
+  }
+
+  const openNew = () => openForm(null);
+
+  async function openEdit(id){
+    const snap = await getDoc(doc(db,`ligas/${LIGA_ID}/equipos/${id}`));
+    if(snap.exists()) openForm({id:snap.id,...snap.data()});
+  }
+
+  async function remove(id){
+    try{ await deleteDoc(doc(db,`ligas/${LIGA_ID}/equipos/${id}`)); showToast('success','Eliminado'); load(); }
+    catch(err){ showToast('error',err.message); }
   }
 
   header.querySelector('#newBtn').addEventListener('click',openNew);

@@ -1,5 +1,6 @@
 import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../firebase-ui.js';
 import { el, renderResponsiveTable, openSheet, readForm, setBusy, showToast, emptyState, closeModal, confirmDialog } from '../ui-kit.js';
+import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
 
 export async function render(){
@@ -10,16 +11,23 @@ export async function render(){
   ]);
   section.appendChild(header);
   const container=el('div'); section.appendChild(container);
+  let rows=[];
 
   async function load(){
     const snap=await getDocs(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/tarifas`));
-    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    rows=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){
       container.innerHTML='';
       container.appendChild(emptyState({icon:'price_check',title:'Sin tarifas',body:'',action:{label:'Crear',onClick:openNew}}));
       return;
     }
-    renderResponsiveTable(container,{columns:[{key:'rama',label:'Rama'},{key:'categoria',label:'Categoría'},{key:'monto',label:'Monto',format:v=>`$${v}`}],rows,actions:[{icon:'edit',label:'Editar',onClick:openEdit},{icon:'delete',label:'Eliminar',onClick:remove}]});
+    renderResponsiveTable(container,{columns:[{key:'rama',label:'Rama'},{key:'categoria',label:'Categoría'},{key:'monto',label:'Monto',format:v=>`$${v}`}],rows});
+    injectRowActions({
+      root: container,
+      rowSelector: 'tbody tr[data-id], .table-stack .row[data-id]',
+      onEdit: ({id})=>openEdit(id),
+      onDelete: ({id})=>remove(id)
+    });
   }
 
   function openForm(row){
@@ -46,12 +54,12 @@ export async function render(){
   }
 
   const openNew = ()=>openForm(null);
-  const openEdit = row=>openForm(row);
+  const openEdit = id=>{ const row=rows.find(r=>r.id===id); if(row) openForm(row); };
 
-  async function remove(row){
+  async function remove(id){
     const ok = await confirmDialog({body:'¿Eliminar tarifa?',confirmText:'Eliminar'});
     if(!ok) return;
-    try{ await deleteDoc(doc(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/tarifas/${row.id}`)); showToast('success','Eliminado'); load(); }
+    try{ await deleteDoc(doc(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/tarifas/${id}`)); showToast('success','Eliminado'); load(); }
     catch(err){ showToast('error',err.message); }
   }
 

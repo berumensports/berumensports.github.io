@@ -1,0 +1,21 @@
+/* Berumen • Row actions (móvil + desktop) */
+.actions { display:flex; align-items:center; gap:8px; }
+.cell-actions { white-space:nowrap; text-align:right; }
+.action-btn {
+  --bg: color-mix(in srgb, var(--surface, #fff) 92%, #000 8%);
+  --bd: var(--border, #e2e8f0);
+  display:inline-flex; align-items:center; justify-content:center;
+  height:36px; width:36px; border-radius:10px; border:1px solid var(--bd);
+  background: var(--bg); color: var(--text, #0f172a); cursor:pointer;
+  transition: background .16s ease, transform .04s ease;
+}
+.action-btn:hover { background: color-mix(in srgb, var(--surface, #fff) 88%, #000 12%); }
+.action-btn:active { transform: translateY(1px); }
+.action-btn--edit { color:#2563eb; border-color: color-mix(in srgb, #2563eb 30%, var(--bd)); }
+.action-btn--delete { color:#ef4444; border-color: color-mix(in srgb, #ef4444 30%, var(--bd)); }
+.action-btn[disabled] { opacity:.5; cursor:not-allowed; }
+.actions--card { justify-content:flex-end; margin-top:8px; }
+/* en tablas, agrega una columna Acciones (desktop) */
+@media (min-width:768px){
+  th.th-actions { width: 120px; text-align:right; }
+}
