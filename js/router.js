@@ -7,6 +7,7 @@ import equiposView from "./views/equipos.js";
 import tarifasView from "./views/tarifas.js";
 import partidosView from "./views/partidos.js";
 import cobrosView from "./views/cobros.js";
+import arbitrosView from "./views/arbitros.js";
 import reportesView from "./views/reportes.js";
 
 const routes = {
@@ -18,6 +19,7 @@ const routes = {
   '/tarifas': tarifasView,
   '/partidos': partidosView,
   '/cobros': cobrosView,
+  '/arbitros': arbitrosView,
   '/reportes': reportesView
 };
 

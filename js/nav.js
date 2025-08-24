@@ -3,6 +3,7 @@ const ROUTES = [
   '#/partidos',
   '#/equipos',
   '#/cobros',
+  '#/arbitros',
   '#/delegaciones',
   '#/tarifas',
   '#/reportes',
