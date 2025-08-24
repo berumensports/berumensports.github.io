@@ -1,3 +1,4 @@
+import { Modal } from './modal-manager.js';
 import { auth, onAuthChanged, signOut, userRole, ensureUserProfile, ensureTemporada } from './firebase-ui.js';
 import { qs, showToast } from './ui-kit.js';
 import { enhanceView } from './views/_shared-patches.js';
@@ -12,6 +13,7 @@ const AUTH = {
 let authState = AUTH.UNKNOWN;
 const app = qs('#app');
 app.innerHTML = '<p class="loading">Cargando...</p>';
+Modal.init();
 
 const routes = {
   '#/': () => import('./views/dashboard.js'),
@@ -90,6 +92,7 @@ onAuthChanged(async (user) => {
 });
 
 window.addEventListener('hashchange', () => {
+  Modal.closeAll();
   localStorage.setItem('lastRoute', location.hash);
   router();
 });
@@ -106,6 +109,7 @@ function navigate(route) {
 }
 async function onSignOut() {
   await signOut();
+  Modal.closeAll();
   showToast('success', 'Sesión cerrada');
   navigate('#/login');
 }

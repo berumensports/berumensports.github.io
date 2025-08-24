@@ -1,5 +1,6 @@
+import { Modal } from '../modal-manager.js';
 import { db, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from '../firebase-ui.js';
-import { el, renderResponsiveTable, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID } from '../constants.js';
 
@@ -44,11 +45,11 @@ export async function render(){
       try{
         if(row){ await updateDoc(doc(db,`ligas/${LIGA_ID}/equipos/${row.id}`), data); }
         else{ await addDoc(collection(db,`ligas/${LIGA_ID}/equipos`), data); }
-        closeModal(); load(); showToast('success','Guardado');
+        Modal.close(); load(); showToast('success','Guardado');
       }catch(err){ showToast('error',err.message); }
       finally{ setBusy(btn,false); }
     });
-    openSheet(row?'Editar equipo':'Nuevo equipo',form);
+    Modal.sheet(form,{title:row?'Editar equipo':'Nuevo equipo'});
   }
 
   const openNew = () => openForm(null);

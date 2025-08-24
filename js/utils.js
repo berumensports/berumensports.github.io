@@ -15,13 +15,3 @@ export const buildWhere = (filters={}) => {
   Object.entries(filters).forEach(([k,v])=>{ if(v!==undefined && v!=='') arr.push(where(k,'==',v)); });
   return arr;
 };
-
-// Modal helpers
-export function openModal(id){
-  qs(id).classList.add('open');
-  const first = qs(id+' .modal');
-  first?.focus();
-}
-export function closeModal(id){
-  qs(id).classList.remove('open');
-}

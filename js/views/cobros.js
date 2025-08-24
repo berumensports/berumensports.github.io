@@ -1,5 +1,6 @@
+import { Modal } from '../modal-manager.js';
 import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../firebase-ui.js';
-import { el, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { el, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
 
@@ -49,10 +50,10 @@ export async function render(){
       try{
         if(row){ await updateDoc(doc(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros/${row.id}`), {equipo:data.equipo,monto:data.monto,saldo:data.saldo}); }
         else{ await addDoc(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros`), {equipo:data.equipo,monto:data.monto,saldo:data.saldo}); }
-        closeModal(); load(); showToast('success','Guardado');
+        Modal.close(); load(); showToast('success','Guardado');
       }catch(err){ showToast('error',err.message); } finally{ setBusy(btn,false); }
     });
-    openSheet(row?'Editar cobro':'Nuevo cobro',form);
+    Modal.sheet(form,{title:row?'Editar cobro':'Nuevo cobro'});
   }
 
   const openEdit = id=>{ const row=rows.find(r=>r.id===id); if(row) openForm(row); };
@@ -73,10 +74,10 @@ export async function render(){
       const data=readForm(form); const m=Number(data.monto);
       if(m<=0 || m>row.saldo){showToast('error','Monto inválido');return;}
       const btn=form.querySelector('button'); setBusy(btn,true);
-      try{ await addDoc(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros/${row.id}/abonos`), {monto:m,fecha:new Date().toISOString()}); closeModal(); showToast('success','Abono registrado'); }
+      try{ await addDoc(collection(db,`ligas/${LIGA_ID}/t/${TEMP_ID}/cobros/${row.id}/abonos`), {monto:m,fecha:new Date().toISOString()}); Modal.close(); showToast('success','Abono registrado'); }
       catch(err){showToast('error',err.message);} finally{ setBusy(btn,false); }
     });
-    openSheet('Registrar abono',form);
+    Modal.sheet(form,{title:'Registrar abono'});
   }
 
   await load();

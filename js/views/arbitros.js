@@ -1,4 +1,5 @@
-import { el, renderResponsiveTable, openSheet, readForm, setBusy, showToast, emptyState, closeModal } from '../ui-kit.js';
+import { Modal } from '../modal-manager.js';
+import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { listArbitros, getArbitro, createArbitro, updateArbitro, deleteArbitro } from '../data/arbitros.js';
 import { listDelegaciones } from '../data/delegaciones.js';
 import { listPagos, createPago, sumPagos } from '../data/pagos-arbitros.js';
@@ -101,10 +102,10 @@ export async function render(){
       const btn=form.querySelector('button'); setBusy(btn,true);
       try{
         if(row) await updateArbitro(row.id,data); else await createArbitro(data);
-        closeModal(); showToast('success','Guardado'); load();
+        Modal.close(); showToast('success','Guardado'); load();
       }catch(err){showToast('error',err.message);}finally{setBusy(btn,false);} 
     });
-    openSheet(row?'Editar árbitro':'Nuevo árbitro',form);
+    Modal.sheet(form,{title:row?'Editar árbitro':'Nuevo árbitro'});
   }
   const openNew=()=>openForm(null);
   async function openEdit(id){ const r=await getArbitro(id); if(r) openForm(r); }
@@ -134,10 +135,10 @@ export async function render(){
           metodo: data.metodo,
           referencia: data.referencia
         });
-        closeModal(); showToast('success','Pago registrado'); load();
+        Modal.close(); showToast('success','Pago registrado'); load();
       }catch(err){showToast('error',err.message);}finally{setBusy(btn,false);} 
     });
-    openSheet(`Registrar pago • ${row.nombre}`,form);
+    Modal.sheet(form,{title:`Registrar pago • ${row.nombre}`});
   }
 
   async function openDetail(id){
@@ -188,9 +189,9 @@ export async function render(){
     const content = el('div',{class:'stack'},[
       el('h3',{},arbitro.nombre||''),
       tabs,
-      role==='admin'?el('button',{class:'btn btn-primary',onClick:()=>{closeModal();openPago({id:arbitro.id,nombre:arbitro.nombre});}},'Registrar pago'):null
+      role==='admin'?el('button',{class:'btn btn-primary',onClick:()=>{Modal.close();openPago({id:arbitro.id,nombre:arbitro.nombre});}},'Registrar pago'):null
     ]);
-    openSheet('Detalle árbitro',content);
+    Modal.sheet(content,{title:'Detalle árbitro'});
   }
 
   await load();
