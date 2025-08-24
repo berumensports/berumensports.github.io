@@ -1,10 +1,10 @@
-/* -------- Berumen Sports • Desktop layout fixes (≥1024px) -------- */
+/* -------- Berumen Sports • Layout fixes for tablet & desktop (≥768px) -------- */
 :root{
   --page-max: 1200px;
   --sidebar-w: 280px;
   --gutter: 24px;
 }
-@media (min-width:1024px){
+@media (min-width:768px){
 
   /* Topbar: centrada y con ancho máximo */
   .topbar{

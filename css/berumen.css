@@ -81,8 +81,8 @@ img{max-width:100%;display:block;}
 .sidedrawer.open{transform:translateX(0);} 
 .sidedrawer nav a{display:block;padding:12px 8px;border-radius:8px;color:var(--text);} 
 .sidedrawer nav a:hover{background:rgba(0,0,0,.05);}
-@media(min-width:1024px){
-  .sidedrawer{transform:none;position:static;width:200px;box-shadow:none;border:none;}
+@media(min-width:768px){
+  .sidedrawer{transform:none;position:static;width:280px;box-shadow:none;border:none;}
   .tabbar{display:none;}
 }
 
