@@ -93,7 +93,7 @@ html:not(.is-mobile) .btn-primary:hover { background: var(--primary-600); }
 .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border); background: var(--surface); }
 table{ width:100%; border-collapse:collapse; }
 thead th{
-  position: sticky; top:0; z-index:1; text-align:left;
+  position: sticky; top:var(--topbar-h); z-index:1; text-align:left;
   background: color-mix(in srgb, var(--surface) 94%, #000 6%);
   color: var(--text); border-bottom:1px solid var(--border); padding:12px 14px; font-weight:600; font-size:14px;
 }
