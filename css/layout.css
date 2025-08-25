@@ -1,0 +1,77 @@
+:root {
+  --topbar-h: 56px;
+  --sidebar-w: 264px;
+}
+
+/* Mobile first layout */
+.app-layout {
+  min-height: calc(100dvh - var(--topbar-h));
+}
+
+.topbar {
+  height: var(--topbar-h);
+  z-index: 50;
+}
+
+.sidebar {
+  display: none;
+}
+
+.app-main {
+  min-height: calc(100dvh - var(--topbar-h));
+  overflow: auto;
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  z-index: 60; /* overlay above topbar */
+}
+.drawer-overlay .drawer {
+  background: var(--surface);
+  width: var(--sidebar-w);
+  height: 100%;
+  transform: translateX(-100%);
+  transition: transform .3s ease;
+  z-index: 70; /* drawer above overlay */
+}
+.drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.drawer-overlay.open .drawer {
+  transform: translateX(0);
+}
+
+@media (pointer: fine) and (min-width:1024px) {
+  .app-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0,1fr);
+    grid-template-rows: var(--topbar-h) 1fr;
+    min-height: 100dvh;
+  }
+  .topbar {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+  }
+  .sidebar {
+    display: block;
+    grid-column: 1;
+    grid-row: 2;
+    height: 100%;
+  }
+  .app-main {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .drawer-overlay {
+    display: none;
+  }
+}

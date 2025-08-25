@@ -15,35 +15,53 @@
   <link rel="stylesheet" href="./css/arbitros.css">
   <link rel="stylesheet" href="./css/modals.css">
   <link rel="stylesheet" href="./css/select.css">
+  <link rel="stylesheet" href="./css/layout.css">
 </head>
 <body>
-  <header class="topbar" role="banner">
-    <div class="inner">
-      <button id="menu-btn" class="btn-icon menu-button" aria-label="Menú" aria-controls="drawer" aria-expanded="false">
-        <span class="material-symbols-outlined">menu</span>
-      </button>
-      <h1 class="topbar-title">Berumen Sports • Liga 2025</h1>
-      <div class="topbar-user">
-        <span id="user-role" class="badge"></span>
-        <span id="user-email" class="truncate"></span>
-        <button id="logout-btn" class="btn-icon" aria-label="Salir"><span class="material-symbols-outlined">logout</span></button>
+  <div class="app-layout" id="app-layout">
+    <header class="topbar" id="topbar" role="banner">
+      <div class="inner">
+        <button id="menu-btn" class="btn-icon menu-button" aria-label="Menú" aria-controls="drawer" aria-expanded="false">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <h1 class="topbar-title">Berumen Sports • Liga 2025</h1>
+        <div class="topbar-user">
+          <span id="user-role" class="badge"></span>
+          <span id="user-email" class="truncate"></span>
+          <button id="logout-btn" class="btn-icon" aria-label="Salir"><span class="material-symbols-outlined">logout</span></button>
+        </div>
       </div>
+    </header>
+    <aside class="sidebar" id="sidebar-static">
+      <nav>
+        <a href="#/">Inicio</a>
+        <a href="#/partidos">Partidos</a>
+        <a href="#/equipos">Equipos</a>
+        <a href="#/cobros">Cobros</a>
+        <a href="#/arbitros">Árbitros</a>
+        <a href="#/delegaciones">Delegaciones</a>
+        <a href="#/tarifas">Tarifas</a>
+        <a href="#/reportes">Reportes</a>
+        <a href="#/mas">Más</a>
+      </nav>
+    </aside>
+    <main class="app-main" id="app"></main>
+  </div>
+  <div class="drawer-overlay" id="drawer" hidden>
+    <div class="drawer">
+      <nav>
+        <a href="#/">Inicio</a>
+        <a href="#/partidos">Partidos</a>
+        <a href="#/equipos">Equipos</a>
+        <a href="#/cobros">Cobros</a>
+        <a href="#/arbitros">Árbitros</a>
+        <a href="#/delegaciones">Delegaciones</a>
+        <a href="#/tarifas">Tarifas</a>
+        <a href="#/reportes">Reportes</a>
+        <a href="#/mas">Más</a>
+      </nav>
     </div>
-  </header>
-  <aside id="drawer" class="sidedrawer" role="navigation" aria-label="Menú principal" hidden>
-    <nav>
-      <a href="#/">Inicio</a>
-      <a href="#/partidos">Partidos</a>
-      <a href="#/equipos">Equipos</a>
-      <a href="#/cobros">Cobros</a>
-      <a href="#/arbitros">Árbitros</a>
-      <a href="#/delegaciones">Delegaciones</a>
-      <a href="#/tarifas">Tarifas</a>
-      <a href="#/reportes">Reportes</a>
-      <a href="#/mas">Más</a>
-    </nav>
-  </aside>
-  <main id="app" class="container"></main>
+  </div>
   <nav class="tabbar" role="tablist">
     <a href="#/" class="tab" role="tab" aria-label="Inicio" aria-selected="false"><span class="material-symbols-outlined">home</span><span class="tab-label">Inicio</span></a>
     <a href="#/partidos" class="tab" role="tab" aria-label="Partidos" aria-selected="false"><span class="material-symbols-outlined">sports</span><span class="tab-label">Partidos</span></a>
