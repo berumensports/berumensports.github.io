@@ -1,16 +1,14 @@
 import { Modal } from '../modal-manager.js';
-import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../firebase-ui.js';
+import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, userRole } from '../firebase-ui.js';
 import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState, confirmDialog } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
+import { ensureNewButton } from '../ui-new-button.js';
 
 export async function render(){
+  const role = await userRole();
   const section=el('section',{class:'stack'});
-  const header= el('div',{class:'stack-sm',style:'flex-direction:row;align-items:center;'},[
-    el('h2',{style:'flex:1;'},'Tarifas'),
-    el('button',{class:'btn',id:'newBtn'},'Nueva')
-  ]);
-  section.appendChild(header);
+  section.appendChild(el('h1',{},'Tarifas'));
   const container=el('div'); section.appendChild(container);
   let rows=[];
 
@@ -19,7 +17,8 @@ export async function render(){
     rows=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){
       container.innerHTML='';
-      container.appendChild(emptyState({icon:'price_check',title:'Sin tarifas',body:'',action:{label:'Crear',onClick:openNew}}));
+      container.appendChild(emptyState({icon:'price_check',title:'Sin tarifas',body:'',action: role==='admin'?{label:'Nueva tarifa',onClick:openNew}:null}));
+      await ensureNewButton(section,{text:'Nueva tarifa',icon:'add',onClick:openNew,fab:true});
       return;
     }
     renderResponsiveTable(container,{columns:[{key:'rama',label:'Rama'},{key:'categoria',label:'Categoría'},{key:'monto',label:'Monto',format:v=>`$${v}`}],rows});
@@ -29,6 +28,7 @@ export async function render(){
       onEdit: ({id})=>openEdit(id),
       onDelete: ({id})=>remove(id)
     });
+    await ensureNewButton(section,{text:'Nueva tarifa',icon:'add',onClick:openNew,fab:true});
   }
 
   function openForm(row){
@@ -64,7 +64,6 @@ export async function render(){
     catch(err){ showToast('error',err.message); }
   }
 
-  header.querySelector('#newBtn').addEventListener('click',openNew);
   await load();
   return section;
 }

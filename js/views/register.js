@@ -5,7 +5,7 @@ export default {
   title: 'Registro',
   render(root) {
     root.innerHTML = `
-      <h2>Registro</h2>
+      <h1>Registro</h1>
       <form id="regForm">
         <label>Email<input type="email" name="email" required></label>
         <label>Contraseña<input type="password" name="password" required></label>

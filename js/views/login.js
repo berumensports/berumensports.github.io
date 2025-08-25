@@ -24,7 +24,7 @@ export async function render(){
   });
 
   return el('div',{class:'card',style:'max-width:420px;margin:40px auto;'},[
-    el('h2',{},'Iniciar sesión'),
+    el('h1',{},'Iniciar sesión'),
     form
   ]);
 }
