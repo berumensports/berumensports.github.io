@@ -7,10 +7,14 @@ export const el = (tag, attrs={}, children=[]) => {
     else if(k==='class') element.className = v;
     else if(v!==false && v!=null) element.setAttribute(k,v);
   });
-  (Array.isArray(children)?children:[children]).forEach(c => {
-    if(c==null) return;
-    if(typeof c === 'string' || typeof c === 'number') element.appendChild(document.createTextNode(c));
-    else element.appendChild(c);
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c == null) return;
+    // Allow primitive values like booleans to be rendered as text nodes
+    if (c instanceof Node) {
+      element.appendChild(c);
+    } else {
+      element.appendChild(document.createTextNode(String(c)));
+    }
   });
   return element;
 };
