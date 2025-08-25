@@ -68,13 +68,23 @@ onAuthChanged(async (user) => {
   const roleEl = qs('#user-role');
   const emailEl = qs('#user-email');
   if (user) {
-    await ensureUserProfile();
-    await ensureTemporada();
-    authState = AUTH.AUTHENTICATED;
-    emailEl.textContent = user.email || '';
-    const role = await userRole();
-    roleEl.textContent = role;
-    roleEl.classList.add(role);
+    try {
+      await ensureUserProfile();
+      await ensureTemporada();
+      authState = AUTH.AUTHENTICATED;
+      emailEl.textContent = user.email || '';
+      const role = await userRole();
+      roleEl.textContent = role;
+      roleEl.classList.add(role);
+    } catch (err) {
+      console.error('Failed to initialize user', err);
+      showToast('error', 'No se pudo iniciar la sesión. Permisos insuficientes.');
+      await signOut();
+      authState = AUTH.NOT_AUTHENTICATED;
+      emailEl.textContent = '';
+      roleEl.textContent = '';
+      roleEl.className = 'badge';
+    }
   } else {
     authState = AUTH.NOT_AUTHENTICATED;
     emailEl.textContent = '';
