@@ -4,6 +4,7 @@ import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState } f
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
 import { ensureNewButton } from '../ui-new-button.js';
+import { formatDate } from '../utils.js';
 
 export async function render(){
   const role = await userRole();
@@ -20,7 +21,18 @@ export async function render(){
       await ensureNewButton(section,{text:'Nuevo partido',icon:'add',onClick:openNew,fab:true});
       return;
     }
-    renderResponsiveTable(container,{columns:[{key:'fecha',label:'Fecha'},{key:'local',label:'Local'},{key:'visitante',label:'Visitante'}],rows});
+    renderResponsiveTable(container,{
+      columns:[
+        {
+          key:'fecha',
+          label:'Fecha',
+          format:v=>formatDate(v?.toDate?v.toDate():v)
+        },
+        {key:'local',label:'Local'},
+        {key:'visitante',label:'Visitante'}
+      ],
+      rows
+    });
     injectRowActions({
       root: container,
       rowSelector: 'tbody tr[data-id], .table-stack .row[data-id]',
@@ -32,7 +44,13 @@ export async function render(){
 
   function openForm(row){
     const form=el('form',{class:'stack'},[
-      el('label',{},['Fecha', el('input',{class:'input',type:'date',name:'fecha',required:true,value:row?.fecha||''})]),
+      el('label',{},['Fecha', el('input',{
+        class:'input',
+        type:'date',
+        name:'fecha',
+        required:true,
+        value: row?.fecha ? (row.fecha.toDate ? row.fecha.toDate().toISOString().slice(0,10) : row.fecha) : ''
+      })]),
       el('label',{},['Local', el('input',{class:'input',name:'local',required:true,value:row?.local||''})]),
       el('label',{},['Visitante', el('input',{class:'input',name:'visitante',required:true,value:row?.visitante||''})]),
       el('button',{class:'btn btn-primary',type:'submit'},'Guardar')
