@@ -1,3 +1,4 @@
+/* Shared component styles */
 .table-stack .badge{padding:2px 6px;border-radius:4px;font-size:12px;display:inline-block;}
 .badge-activo{background:var(--primary);color:#fff;}
 .badge-inactivo{background:var(--danger);color:#fff;}
