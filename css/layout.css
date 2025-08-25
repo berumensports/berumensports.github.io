@@ -49,29 +49,29 @@
 }
 
 @media (pointer: fine) and (min-width:1024px) {
-  .app-layout {
+  html:not(.is-mobile) .app-layout {
     display: grid;
     grid-template-columns: var(--sidebar-w) minmax(0,1fr);
     grid-template-rows: var(--topbar-h) 1fr;
     min-height: 100dvh;
   }
-  .topbar {
+  html:not(.is-mobile) .topbar {
     grid-column: 1 / 3;
     grid-row: 1;
     position: sticky;
     top: 0;
   }
-  .sidebar {
+  html:not(.is-mobile) .sidebar {
     display: block;
     grid-column: 1;
     grid-row: 2;
     height: 100%;
   }
-  .app-main {
+  html:not(.is-mobile) .app-main {
     grid-column: 2;
     grid-row: 2;
   }
-  .drawer-overlay {
+  html:not(.is-mobile) .drawer-overlay {
     display: none;
   }
 }
