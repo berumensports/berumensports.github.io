@@ -55,9 +55,12 @@ service cloud.firestore {
           }
         }
         match /pagos_arbitros/{pagoId} {
-          allow read: if isSignedIn() && ligaId == 'BERUMEN' && tempId == '2025';
-          allow create: if isSignedIn() && ligaId == 'BERUMEN' && tempId == '2025' &&
-                        get(/databases/$(database)/documents/ligas/$(ligaId)/usuarios/$(request.auth.uid)).data.role == 'admin' &&
+          allow read: if isSignedIn() &&
+                       resource.data.ligaId == 'BERUMEN' &&
+                       resource.data.tempId == '2025';
+          allow write: if isAdmin() &&
+                        request.resource.data.ligaId == 'BERUMEN' &&
+                        request.resource.data.tempId == '2025' &&
                         request.resource.data.monto > 0 &&
                         request.resource.data.arbitroId is string;
         }
