@@ -23,10 +23,14 @@ service cloud.firestore {
         allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.categoria >= 2009 && request.resource.data.categoria <= 2020;
       }
       match /arbitros/{arbitroId} {
-        allow read: if isSignedIn() && ligaId == 'BERUMEN';
-        allow create, update, delete: if isSignedIn() && ligaId == 'BERUMEN' && get(/databases/$(database)/documents/ligas/$(ligaId)/usuarios/$(request.auth.uid)).data.role == 'admin';
-        allow create: if request.resource.data.ligaId == 'BERUMEN' && request.resource.data.nombre is string;
-        allow update: if request.resource.data.ligaId == 'BERUMEN';
+        allow read: if isSignedIn() && resource.data.ligaId == 'BERUMEN';
+        allow create: if isAdmin() &&
+                      request.resource.data.ligaId == 'BERUMEN' &&
+                      request.resource.data.nombre is string;
+        allow update: if isAdmin() &&
+                      resource.data.ligaId == 'BERUMEN' &&
+                      request.resource.data.ligaId == 'BERUMEN';
+        allow delete: if isAdmin() && resource.data.ligaId == 'BERUMEN';
       }
       match /temporada/{tempId} {
         allow read: if isSignedIn();
