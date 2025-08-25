@@ -13,7 +13,7 @@ import {
   getCountFromServer,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
+  signOut as fbSignOut,
   onAuthStateChanged,
   runDiag
 } from './firebase.js';
@@ -37,9 +37,12 @@ export {
   getCountFromServer,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
   runDiag
 };
+
+export async function signOut(){
+  await fbSignOut(auth);
+}
 
 export function onAuthChanged(cb){
   return onAuthStateChanged(auth, cb);
