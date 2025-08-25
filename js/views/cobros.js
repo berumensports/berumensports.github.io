@@ -1,12 +1,14 @@
 import { Modal } from '../modal-manager.js';
-import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../firebase-ui.js';
+import { db, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, userRole } from '../firebase-ui.js';
 import { el, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
+import { ensureNewButton } from '../ui-new-button.js';
 
 export async function render(){
+  const role = await userRole();
   const section=el('section',{class:'stack'});
-  section.appendChild(el('h2',{},'Cobros'));
+  section.appendChild(el('h1',{},'Cobros'));
   const container=el('div',{class:'stack'}); section.appendChild(container);
   let rows=[];
 
@@ -15,7 +17,8 @@ export async function render(){
     rows=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){
       container.innerHTML='';
-      container.appendChild(emptyState({icon:'payments',title:'Sin cobros',body:'',action:null}));
+      container.appendChild(emptyState({icon:'payments',title:'Sin cobros',body:'',action: role==='admin'?{label:'Nuevo cobro',onClick:openNew}:null}));
+      await ensureNewButton(section,{text:'Nuevo cobro',icon:'add',onClick:openNew,fab:true});
       return;
     }
     container.innerHTML='';
@@ -33,6 +36,7 @@ export async function render(){
       onEdit: ({id})=>openEdit(id),
       onDelete: ({id})=>remove(id)
     });
+    await ensureNewButton(section,{text:'Nuevo cobro',icon:'add',onClick:openNew,fab:true});
   }
 
   function openForm(row){
@@ -56,6 +60,7 @@ export async function render(){
     Modal.sheet(form,{title:row?'Editar cobro':'Nuevo cobro'});
   }
 
+  const openNew = ()=>openForm(null);
   const openEdit = id=>{ const row=rows.find(r=>r.id===id); if(row) openForm(row); };
 
   async function remove(id){

@@ -7,34 +7,34 @@ import { listPartidosDeArbitro } from '../data/partidos-arbitro.js';
 import { injectRowActions } from '../row-actions.js';
 import { userRole } from '../firebase-ui.js';
 import { money, formatDate } from '../utils.js';
+import { ensureNewButton } from '../ui-new-button.js';
 
 export async function render(){
   const role = await userRole();
   const section = el('section',{class:'stack'});
-  const header = el('div',{class:'stack-sm',style:'flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;'},[
-    el('h2',{style:'flex:1 1 100%;'},'Árbitros'),
+  section.appendChild(el('h1',{},'Árbitros'));
+  const toolbar = el('div',{class:'stack-sm',style:'flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;'},[
     el('input',{type:'search',class:'input',id:'search',placeholder:'Buscar'}),
     el('select',{class:'input',id:'fDeleg'},[el('option',{value:''},'Delegación')]),
     el('select',{class:'input',id:'fActivo'},[
       el('option',{value:''},'Estatus'),
       el('option',{value:'true'},'Activo'),
       el('option',{value:'false'},'Inactivo')
-    ]),
-    role==='admin'?el('button',{class:'btn btn-primary',id:'newBtn'},'Nuevo árbitro'):null
+    ])
   ]);
-  section.appendChild(header);
+  section.appendChild(toolbar);
   const container = el('div');
   section.appendChild(container);
 
   const delegaciones = await listDelegaciones();
-  const sel = header.querySelector('#fDeleg');
+  const sel = toolbar.querySelector('#fDeleg');
   delegaciones.forEach(d=>sel.appendChild(el('option',{value:d.id},d.nombre)));
 
   async function load(){
     const filters={};
-    const q = header.querySelector('#search').value.trim().toLowerCase();
-    const del = header.querySelector('#fDeleg').value;
-    const act = header.querySelector('#fActivo').value;
+    const q = toolbar.querySelector('#search').value.trim().toLowerCase();
+    const del = toolbar.querySelector('#fDeleg').value;
+    const act = toolbar.querySelector('#fActivo').value;
     if(del) filters.delegacionId = del;
     if(act!=='' ) filters.activo = act==='true';
     let rows = await listArbitros(filters);
@@ -48,7 +48,8 @@ export async function render(){
     }
     if(!rows.length){
       container.innerHTML='';
-      container.appendChild(emptyState({icon:'person',title:'Sin árbitros',body:'',action: role==='admin'?{label:'Crear',onClick:openNew}:null}));
+      container.appendChild(emptyState({icon:'person',title:'Sin árbitros',body:'',action: role==='admin'?{label:'Nuevo árbitro',onClick:openNew}:null}));
+      await ensureNewButton(section,{text:'Nuevo árbitro',icon:'add',onClick:openNew,fab:true});
       return;
     }
     renderResponsiveTable(container,{
@@ -74,12 +75,12 @@ export async function render(){
         onDelete: ({id})=>remove(id)
       });
     }
+    await ensureNewButton(section,{text:'Nuevo árbitro',icon:'add',onClick:openNew,fab:true});
   }
 
-  header.querySelector('#search').addEventListener('input',()=>{clearTimeout(header._t);header._t=setTimeout(load,300);});
-  header.querySelector('#fDeleg').addEventListener('change',load);
-  header.querySelector('#fActivo').addEventListener('change',load);
-  if(role==='admin') header.querySelector('#newBtn').addEventListener('click',openNew);
+  toolbar.querySelector('#search').addEventListener('input',()=>{clearTimeout(toolbar._t);toolbar._t=setTimeout(load,300);});
+  toolbar.querySelector('#fDeleg').addEventListener('change',load);
+  toolbar.querySelector('#fActivo').addEventListener('change',load);
 
   container.addEventListener('click',e=>{
     const row = e.target.closest('[data-id]');

@@ -1,16 +1,14 @@
 import { Modal } from '../modal-manager.js';
-import { db, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from '../firebase-ui.js';
+import { db, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, userRole } from '../firebase-ui.js';
 import { el, renderResponsiveTable, readForm, setBusy, showToast, emptyState } from '../ui-kit.js';
 import { injectRowActions } from '../row-actions.js';
 import { LIGA_ID, TEMP_ID } from '../constants.js';
+import { ensureNewButton } from '../ui-new-button.js';
 
 export async function render(){
+  const role = await userRole();
   const section=el('section',{class:'stack'});
-  const header=el('div',{class:'stack-sm',style:'flex-direction:row;align-items:center;'},[
-    el('h2',{style:'flex:1;'},'Partidos'),
-    el('button',{class:'btn',id:'newBtn'},'Nuevo')
-  ]);
-  section.appendChild(header);
+  section.appendChild(el('h1',{},'Partidos'));
   const container=el('div'); section.appendChild(container);
 
   async function load(){
@@ -18,7 +16,8 @@ export async function render(){
     const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){
       container.innerHTML='';
-      container.appendChild(emptyState({icon:'sports',title:'Sin partidos',body:'',action:{label:'Crear',onClick:openNew}}));
+      container.appendChild(emptyState({icon:'sports',title:'Sin partidos',body:'',action: role==='admin'?{label:'Nuevo partido',onClick:openNew}:null}));
+      await ensureNewButton(section,{text:'Nuevo partido',icon:'add',onClick:openNew,fab:true});
       return;
     }
     renderResponsiveTable(container,{columns:[{key:'fecha',label:'Fecha'},{key:'local',label:'Local'},{key:'visitante',label:'Visitante'}],rows});
@@ -28,6 +27,7 @@ export async function render(){
       onEdit: ({id})=>openEdit(id),
       onDelete: ({id})=>remove(id)
     });
+    await ensureNewButton(section,{text:'Nuevo partido',icon:'add',onClick:openNew,fab:true});
   }
 
   function openForm(row){
@@ -62,7 +62,6 @@ export async function render(){
     catch(err){ showToast('error',err.message); }
   }
 
-  header.querySelector('#newBtn').addEventListener('click',openNew);
   await load();
   return section;
 }
