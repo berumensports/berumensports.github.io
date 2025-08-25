@@ -39,7 +39,8 @@ export async function render(){
       root: container,
       rowSelector: 'tbody tr[data-id], .table-stack .row[data-id]',
       onEdit: ({id})=>openEdit(id),
-      onDelete: ({id})=>remove(id)
+      onDelete: ({id})=>remove(id),
+      getRole: () => role
     });
     await ensureNewButton(section,{text:'Nuevo equipo',icon:'add',onClick:openNew,fab:true});
   }

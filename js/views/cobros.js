@@ -34,7 +34,8 @@ export async function render(){
       root: container,
       rowSelector: 'div.card[data-id]',
       onEdit: ({id})=>openEdit(id),
-      onDelete: ({id})=>remove(id)
+      onDelete: ({id})=>remove(id),
+      getRole: () => role
     });
     await ensureNewButton(section,{text:'Nuevo cobro',icon:'add',onClick:openNew,fab:true});
   }
