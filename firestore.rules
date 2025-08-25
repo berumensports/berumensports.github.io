@@ -1,70 +1,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null; }
     function isAdmin() {
       return request.auth != null &&
-             get(/databases/$(database)/documents/ligas/BERUMEN/usuarios/$(request.auth.uid)).data.role == 'admin';
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    match /ligas/BERUMEN {      
-      allow read: if isSignedIn();
-      match /usuarios/{uid} {
-        allow read: if isSignedIn();
-        allow create: if request.auth.uid == uid && request.resource.data.role == 'consulta';
-        allow update, delete: if false;
-      }
-      match /delegaciones/{id} {
-        allow read: if isSignedIn();
-        allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN';
-      }
-      match /equipos/{id} {
-        allow read: if isSignedIn();
-        allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.categoria >= 2009 && request.resource.data.categoria <= 2020;
-      }
-      match /arbitros/{arbitroId} {
-        allow read: if isSignedIn() && resource.data.ligaId == 'BERUMEN';
-        allow create: if isAdmin() &&
-                      request.resource.data.ligaId == 'BERUMEN' &&
-                      request.resource.data.nombre is string;
-        allow update: if isAdmin() &&
-                      resource.data.ligaId == 'BERUMEN' &&
-                      request.resource.data.ligaId == 'BERUMEN';
-        allow delete: if isAdmin() && resource.data.ligaId == 'BERUMEN';
-      }
-      match /temporada/{tempId} {
-        allow read: if isSignedIn();
-        allow write: if isAdmin();
-      }
-      match /t/2025 {
-        allow read: if isSignedIn();
-        match /tarifas/{tid} {
-          allow read: if isSignedIn();
-          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
-        }
-        match /partidos/{pid} {
-          allow read: if isSignedIn();
-          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
-        }
-        match /cobros/{cid} {
-          allow read: if isSignedIn();
-          allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025';
-          match /abonos/{aid} {
-            allow read: if isSignedIn();
-            allow write: if isAdmin() && request.resource.data.ligaId == 'BERUMEN' && request.resource.data.tempId == '2025' && request.resource.data.monto > 0;
-          }
-        }
-        match /pagos_arbitros/{pagoId} {
-          allow read: if isSignedIn() &&
-                       resource.data.ligaId == 'BERUMEN' &&
-                       resource.data.tempId == '2025';
-          allow write: if isAdmin() &&
-                        request.resource.data.ligaId == 'BERUMEN' &&
-                        request.resource.data.tempId == '2025' &&
-                        request.resource.data.monto > 0 &&
-                        request.resource.data.arbitroId is string;
-        }
-      }
+    // Permite lecturas a cualquier usuario autenticado; escrituras solo a admins
+    match /{document=**} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
   }
 }
