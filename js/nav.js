@@ -18,10 +18,11 @@ let state = {
   getAuthState: null,
   getRole: null,
   onSignOut: null,
-  drawer: null,
+  drawer: null,        // overlay container
+  drawerPanel: null,   // drawer content
+  sidebar: null,       // static sidebar
   menuBtn: null,
   tabbar: null,
-  overlay: null,
   lastFocus: null
 };
 
@@ -42,17 +43,17 @@ export function initNav({ getAuthState, getRole, navigate, onSignOut }) {
   state.navigate = navigate;
   state.onSignOut = onSignOut;
 
-  state.drawer = document.querySelector('.sidedrawer');
+  state.drawer = document.getElementById('drawer');
+  state.drawerPanel = state.drawer?.querySelector('.drawer');
+  state.sidebar = document.getElementById('sidebar-static');
   state.menuBtn = document.getElementById('menu-btn');
   state.tabbar = document.querySelector('.tabbar');
 
-  if (state.drawer) {
-    state.drawer.addEventListener('click', handleNavClick);
-    state.drawer.addEventListener('keydown', handleDrawerKeydown);
-  }
-  if (state.tabbar) {
-    state.tabbar.addEventListener('click', handleNavClick);
-  }
+  state.drawerPanel?.addEventListener('click', handleNavClick);
+  state.drawerPanel?.addEventListener('keydown', handleDrawerKeydown);
+  state.drawer?.addEventListener('click', (e) => { if (e.target === state.drawer) closeDrawer(); });
+  state.sidebar?.addEventListener('click', handleNavClick);
+  state.tabbar?.addEventListener('click', handleNavClick);
   state.menuBtn?.addEventListener('click', (e) => { e.preventDefault(); toggleDrawer(); });
 
   const logoutBtn = document.getElementById('logout-btn');
@@ -61,11 +62,6 @@ export function initNav({ getAuthState, getRole, navigate, onSignOut }) {
     closeDrawer();
     await state.onSignOut?.();
   });
-
-  state.overlay = document.createElement('div');
-  state.overlay.className = 'drawer-overlay';
-  state.overlay.addEventListener('click', closeDrawer);
-  document.body.appendChild(state.overlay);
 
   window.addEventListener('hashchange', () => {
     if (state.locked) return;
@@ -127,8 +123,16 @@ export function setActiveRoute(route) {
       else t.removeAttribute('aria-current');
     });
   }
-  if (state.drawer) {
-    const links = Array.from(state.drawer.querySelectorAll('a'));
+  if (state.drawerPanel) {
+    const links = Array.from(state.drawerPanel.querySelectorAll('a'));
+    links.forEach(a => {
+      const active = canonicalize(a.getAttribute('href')) === target;
+      if (active) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  }
+  if (state.sidebar) {
+    const links = Array.from(state.sidebar.querySelectorAll('a'));
     links.forEach(a => {
       const active = canonicalize(a.getAttribute('href')) === target;
       if (active) a.setAttribute('aria-current', 'page');
@@ -143,7 +147,6 @@ export function openDrawer() {
   state.lastFocus = document.activeElement;
   state.drawer.hidden = false;
   state.drawer.classList.add('open');
-  state.overlay.classList.add('active');
   document.body.classList.add('lock-scroll');
   state.menuBtn?.setAttribute('aria-expanded', 'true');
   const focusable = state.drawer.querySelector('a,button,[tabindex]:not([tabindex="-1"])');
@@ -153,7 +156,6 @@ export function openDrawer() {
 export function closeDrawer() {
   if (!state.drawer) return;
   state.drawer.classList.remove('open');
-  state.overlay.classList.remove('active');
   document.body.classList.remove('lock-scroll');
   state.menuBtn?.setAttribute('aria-expanded', 'false');
   state.drawer.addEventListener('transitionend', () => {
