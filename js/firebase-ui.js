@@ -50,7 +50,7 @@ export async function ensureUserProfile(){
   if (!u) return;
   const ref = doc(db, `ligas/${LIGA_ID}/usuarios/${u.uid}`);
   const snap = await getDoc(ref);
-  if (!snap.exists()) await setDoc(ref,{email:u.email,rol:'consulta',creado:serverTimestamp()});
+  if (!snap.exists()) await setDoc(ref,{email:u.email,role:'consulta',creado:serverTimestamp()});
 }
 
 export async function ensureTemporada(){
@@ -64,7 +64,7 @@ export async function userRole(){
   if(!uid) return 'consulta';
   const ref = doc(db, `ligas/${LIGA_ID}/usuarios/${uid}`);
   const snap = await getDoc(ref);
-  return snap.exists()? (snap.data().rol||'consulta') : 'consulta';
+  return snap.exists()? (snap.data().role||'consulta') : 'consulta';
 }
 
 window.__FIREBASE_APP_OPTIONS__ = app.options;
