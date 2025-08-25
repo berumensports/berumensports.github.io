@@ -54,6 +54,9 @@ p, label, th, td, input, select, button, small { color: var(--text); }
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px;
 }
 .section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 10px 0 14px; }
+.section-header .btn-row{display:flex; gap:8px;}
+.fab{position:fixed;right:16px;bottom:calc(80px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:none;background:var(--primary);color:#fff;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;z-index:40;}
+html:not(.is-mobile) .fab{display:none;}
 
 /* Topbar */
 .topbar { position: sticky; top:0; z-index:50; backdrop-filter: saturate(140%) blur(8px); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 80%, transparent); }
