@@ -32,6 +32,9 @@ export function renderShell() {
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href^="#/"]');
     if (a && a.getAttribute('href') === location.hash) e.preventDefault();
+    if (!drawer.hidden && !drawer.contains(e.target) && e.target !== menuBtn) {
+      drawer.hidden = true;
+    }
   });
   rendered = true;
 }
