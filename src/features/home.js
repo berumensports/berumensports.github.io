@@ -1,5 +1,5 @@
 import { addDiagnostic } from '../data/repo.js';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from '../data/firebase.js';
 
 export async function render(el) {
   el.innerHTML = `<div class="card"><h2>Home</h2><button id="smoke">Probar escritura</button><div id="result"></div></div>`;

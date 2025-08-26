@@ -1,5 +1,4 @@
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from './firebase.js';
+import { db, collection, addDoc, updateDoc, deleteDoc, doc } from './firebase.js';
 import { LIGA_ID, TEMP_ID, paths } from './paths.js';
 
 async function safeWrite(cb, label) {

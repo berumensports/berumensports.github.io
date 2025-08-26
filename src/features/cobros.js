@@ -1,5 +1,4 @@
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy } from '../data/firebase.js';
 import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
 import { addCobro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
