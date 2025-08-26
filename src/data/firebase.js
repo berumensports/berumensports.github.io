@@ -4,10 +4,10 @@ import { getAuth } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth
 
 // TODO: replace with your Firebase project config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  apiKey: "AIzaSyAW04kavFwGnaRJkLkHWD50WKHaxamekSU",
+  authDomain: "berumen-sports.firebaseapp.com",
+  projectId: "berumen-sports",
+  storageBucket: "berumen-sports.appspot.com",
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
