@@ -1,6 +1,13 @@
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../data/firebase.js';
+import {
+  db,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  doc,
+  getDoc,
+  setDoc,
+} from '../data/firebase.js';
 
 const LIGA_ID = 'BERUMEN';
 let cachedRole = null;
