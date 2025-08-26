@@ -23,4 +23,3 @@ npm test
 - Login con correo/contraseña.
 - Dashboard con botón de prueba de escritura.
 - Módulos de equipos, árbitros, partidos, cobros y reportes básicos.
-
