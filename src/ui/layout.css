@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+#app {
+  padding-top: 56px;
+  padding-bottom: 56px;
+}
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space);
+  z-index: 1000;
+}
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 900;
+}
+@media (min-width:1024px) and (pointer:fine) {
+  .tabbar { display:none; }
+}

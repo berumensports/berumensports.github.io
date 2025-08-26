@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "equipos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"delegacionId","order":"ASCENDING"},
+        {"fieldPath":"rama","order":"ASCENDING"},
+        {"fieldPath":"categoria","order":"ASCENDING"},
+        {"fieldPath":"nombre","order":"ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "arbitros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"activo","order":"ASCENDING"},
+        {"fieldPath":"nombre","order":"ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "partidos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"tempId","order":"ASCENDING"},
+        {"fieldPath":"estado","order":"ASCENDING"},
+        {"fieldPath":"fecha","order":"DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "cobros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"tempId","order":"ASCENDING"},
+        {"fieldPath":"pagado","order":"ASCENDING"},
+        {"fieldPath":"fechaCobro","order":"DESCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

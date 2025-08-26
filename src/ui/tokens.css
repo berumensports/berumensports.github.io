@@ -1,0 +1,10 @@
+:root {
+  --color-primary: #2b6cb0;
+  --color-primary-light: #4299e1;
+  --color-bg: #f7fafc;
+  --color-text: #1a202c;
+  --radius: 4px;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --space: 1rem;
+  font-family: system-ui, sans-serif;
+}
