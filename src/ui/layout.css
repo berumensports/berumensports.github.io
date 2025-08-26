@@ -20,6 +20,26 @@ body {
   padding: 0 var(--space);
   z-index: 1000;
 }
+
+#drawer {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  bottom: 0;
+  width: 200px;
+  background: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space);
+  gap: var(--space);
+  z-index: 950;
+}
+
+#drawer a {
+  color: inherit;
+  text-decoration: none;
+}
 .tabbar {
   position: fixed;
   bottom: 0;
