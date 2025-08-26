@@ -15,7 +15,6 @@ function showLogin() {
 }
 
 onAuth(async user => {
-  const app = document.getElementById('app');
   if (!user) {
     showLogin();
   } else {

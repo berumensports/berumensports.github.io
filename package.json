@@ -1,0 +1,22 @@
+{
+  "name": "berumensports.github.io",
+  "version": "1.0.0",
+  "description": "SPA simple para administrar liga Berumen usando Firebase y GitHub Pages.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run lint",
+    "dev": "serve .",
+    "lint": "eslint src"
+  },
+  "keywords": [],
+  "author": "Berumen Sports",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "firebase": "^12.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "serve": "^14.2.4"
+  }
+}

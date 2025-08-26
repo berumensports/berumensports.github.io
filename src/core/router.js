@@ -9,7 +9,13 @@ const routes = {
 
 let cleanupFns = [];
 function runCleanup() {
-  cleanupFns.forEach(fn => { try { fn(); } catch (e) {} });
+  cleanupFns.forEach(fn => {
+    try {
+      fn();
+    } catch (e) {
+      console.error(e);
+    }
+  });
   cleanupFns = [];
 }
 export function pushCleanup(fn) { cleanupFns.push(fn); }
