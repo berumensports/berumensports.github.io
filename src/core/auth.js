@@ -21,15 +21,22 @@ export function getUserRole() {
 
 export async function fetchUserRole(uid) {
   const ref = doc(db, 'users', uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, { role: 'consulta', ligaId: LIGA_ID });
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, { role: 'consulta', ligaId: LIGA_ID });
+      cachedRole = 'consulta';
+    } else {
+      cachedRole = snap.data().role;
+    }
+    localStorage.setItem('userRole', cachedRole);
+    return cachedRole;
+  } catch (err) {
+    console.error('Failed to fetch user role', err);
     cachedRole = 'consulta';
-  } else {
-    cachedRole = snap.data().role;
+    localStorage.setItem('userRole', cachedRole);
+    return cachedRole;
   }
-  localStorage.setItem('userRole', cachedRole);
-  return cachedRole;
 }
 
 export function login(email, password) {
