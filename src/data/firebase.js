@@ -1,6 +1,6 @@
-import { getApps, getApp, initializeApp } from 'firebase/app';
-import { initializeFirestore, getFirestore, setLogLevel } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getApps, getApp, initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { initializeFirestore, getFirestore, setLogLevel } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 
 // TODO: replace with your Firebase project config
 const firebaseConfig = {
