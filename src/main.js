@@ -1,6 +1,3 @@
-import './ui/tokens.css';
-import './ui/layout.css';
-import './ui/components.css';
 import './data/firebase.js';
 import { renderShell } from './core/shell.js';
 import { onAuth, login, logout, fetchUserRole } from './core/auth.js';
