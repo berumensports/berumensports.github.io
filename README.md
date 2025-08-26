@@ -12,9 +12,11 @@ SPA simple para administrar liga Berumen usando Firebase y GitHub Pages.
 ## Desarrollo
 ```
 # instalar dependencias
-npm install firebase
-# ejecutar con un servidor estático
-npx serve .
+npm install
+# servidor de desarrollo
+npm run dev
+# ejecutar linter
+npm test
 ```
 
 ## Uso
