@@ -15,6 +15,14 @@ service cloud.firestore {
       allow write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Allow all authenticated users to create diagnostic entries
+    match /diagnostics/{id} {
+      allow read: if signedIn() && isLiga(resource.data) && isTemp(resource.data);
+      allow create: if signedIn() && isLiga(request.resource.data) && isTemp(request.resource.data);
+      // Only admins can modify or delete diagnostics
+      allow update, delete: if signedIn() && isAdmin() && isLiga(resource.data) && isTemp(resource.data);
+    }
+
     match /{coll}/{id} {
       allow read: if signedIn() && isLiga(resource.data) && isTemp(resource.data);
       allow create: if signedIn() && isAdmin() && isLiga(request.resource.data) && isTemp(request.resource.data);
