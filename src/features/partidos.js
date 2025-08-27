@@ -19,28 +19,34 @@ export async function render(el) {
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
-      <table class="responsive-table"><thead><tr><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
+      <table class="responsive-table"><thead><tr><th>Jornada</th><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo())));
+  const [eqSnap, joSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo())))
+  ]);
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
   const q = query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
       const fechaObj = data.fecha ? new Date(data.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
+      const jornada = jornadas[data.jornadaId] || '';
       const local = equipos[data.localId] || data.localId;
       const visita = equipos[data.visitaId] || data.visitaId;
       const marcador = data.jugado && data.marcadorLocal != null && data.marcadorVisita != null ?
         ` (${data.marcadorLocal}-${data.marcadorVisita})` : '';
       return `<tr>
+        <td data-label="Jornada">${jornada}</td>
         <td data-label="Fecha">${fecha}</td>
         <td data-label="Partido">${local} vs ${visita}${marcador}</td>
         ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
       </tr>`;
     }).join('');
-    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?3:2}">No hay partidos</td></tr>`;
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?4:3}">No hay partidos</td></tr>`;
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
