@@ -23,7 +23,12 @@ export async function render(el) {
 
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const cobros = Object.fromEntries(coSnap.docs.map(d => [d.data().partidoId, { id: d.id, ...d.data() }]));
+  const cobros = {};
+  coSnap.docs.forEach(d => {
+    const data = d.data();
+    if (!cobros[data.partidoId]) cobros[data.partidoId] = {};
+    cobros[data.partidoId][data.equipoId] = { id: d.id, ...data };
+  });
   const tarifas = taSnap.docs.map(d => d.data());
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
   const ramas = new Set(eqSnap.docs.map(d => d.data().rama).filter(Boolean));
@@ -74,10 +79,6 @@ export async function render(el) {
     let saldoPend = 0;
 
     filtered.forEach(pa => {
-      const co = cobros[pa.id] || {};
-      const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
-      const monto = Number(co.monto || 0);
-      const saldo = Math.max(tarifa - monto, 0);
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
@@ -86,30 +87,39 @@ export async function render(el) {
       const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
       const rama = pa.rama || '';
       const categoria = pa.categoria || '';
-      let status;
-      if (!monto) status = 'Pendiente';
-      else if (monto < tarifa) status = 'Parcial';
-      else status = 'Pagado';
-      const rowHtml = `<tr>
-        <td data-label="Jornada">${jornada}</td>
-        <td data-label="Rama">${rama}</td>
-        <td data-label="Categoría">${categoria}</td>
-        <td data-label="Equipos">${local} vs ${visita}</td>
-        <td data-label="Fecha">${fecha}</td>
-        <td data-label="Hora">${hora}</td>
-        <td data-label="Tarifa">${fmt.format(tarifa)}</td>
-        <td data-label="Monto">${fmt.format(monto)}</td>
-        <td data-label="Saldo">${fmt.format(saldo)}</td>
-        <td data-label="Estado">${status}</td>
-      </tr>`;
-      rowsByStatus[status].push({ html: rowHtml, tarifa, monto, saldo });
-      tarifaAg += tarifa;
-      totalCobrado += monto;
-      saldoPend += saldo;
-      if (pa.jugado) {
-        partidosJug++;
-        tarifaJug += tarifa;
+
+      function processEquipo(eqId, eqNombre) {
+        const co = cobros[pa.id]?.[eqId] || {};
+        const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
+        const monto = Number(co.monto || 0);
+        const saldo = Math.max(tarifa - monto, 0);
+        let status;
+        if (!monto) status = 'Pendiente';
+        else if (monto < tarifa) status = 'Parcial';
+        else status = 'Pagado';
+        const rowHtml = `<tr>
+          <td data-label="Jornada">${jornada}</td>
+          <td data-label="Rama">${rama}</td>
+          <td data-label="Categoría">${categoria}</td>
+          <td data-label="Equipos">${local} vs ${visita}</td>
+          <td data-label="Equipo">${eqNombre}</td>
+          <td data-label="Fecha">${fecha}</td>
+          <td data-label="Hora">${hora}</td>
+          <td data-label="Tarifa">${fmt.format(tarifa)}</td>
+          <td data-label="Monto">${fmt.format(monto)}</td>
+          <td data-label="Saldo">${fmt.format(saldo)}</td>
+          <td data-label="Estado">${status}</td>
+        </tr>`;
+        rowsByStatus[status].push({ html: rowHtml, tarifa, monto, saldo });
+        tarifaAg += tarifa;
+        totalCobrado += monto;
+        saldoPend += saldo;
+        if (pa.jugado) tarifaJug += tarifa;
       }
+
+      processEquipo(pa.localId, local);
+      processEquipo(pa.visitaId, visita);
+      if (pa.jugado) partidosJug++;
     });
 
     const pendientes = rowsByStatus.Pendiente.length;
@@ -135,8 +145,8 @@ export async function render(el) {
       const totTarifa = group.reduce((s, r) => s + r.tarifa, 0);
       const totMonto = group.reduce((s, r) => s + r.monto, 0);
       const totSaldo = group.reduce((s, r) => s + r.saldo, 0);
-      const summary = `<div class="summary-line"><span>Partidos: ${group.length}</span><span>Tarifa: ${fmt.format(totTarifa)}</span><span>Monto: ${fmt.format(totMonto)}</span><span>Saldo: ${fmt.format(totSaldo)}</span></div>`;
-      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
+      const summary = `<div class="summary-line"><span>Cobros: ${group.length}</span><span>Tarifa: ${fmt.format(totTarifa)}</span><span>Monto: ${fmt.format(totMonto)}</span><span>Saldo: ${fmt.format(totSaldo)}</span></div>`;
+      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
       return `<h3 class="h3 table-label">${labelMap[status]}</h3>${tableHeader}${rowsHtml}</tbody></table>${summary}`;
     }).filter(Boolean);
     const tableHtml = tableParts.length ? tableParts.join('') : '<p>No hay partidos</p>';
