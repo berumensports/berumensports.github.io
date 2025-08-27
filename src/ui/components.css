@@ -107,6 +107,24 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
   box-shadow: var(--shadow-2);
 }
 
+/* Dashboard */
+.dashboard-kpis {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap:var(--space-4);
+  margin-bottom:var(--space-4);
+}
+.dashboard-card {
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align:center;
+}
+.dashboard-card p {
+  margin:0;
+  font-size: var(--fs-h2);
+}
+
 /* Modal */
 .modal-sheet {
   position:fixed; left:0; right:0; bottom:0;
