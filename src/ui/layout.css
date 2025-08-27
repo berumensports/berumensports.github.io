@@ -4,7 +4,7 @@
   --tabbar-h: 60px;
 }
 
-@media (min-width:1024px) {
+@media (min-width:1025px) {
   :root { --topbar-h: 64px; }
 }
 
@@ -41,7 +41,7 @@ body {
   background: var(--color-surface);
   box-shadow: var(--shadow-1);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 0 var(--space-4);
   z-index: 1000;
@@ -54,14 +54,19 @@ body {
   margin-top: var(--space-2);
 }
 
-@media (min-width:1024px) {
+@media (min-width:1025px) {
   .topbar {
     flex-wrap: nowrap;
+    align-items: center;
   }
   #torneo-switch {
     flex: 0 0 auto;
     width: auto;
     margin-top: 0;
+    order: 2;
+  }
+  #logout-btn {
+    order: 3;
   }
 }
 
@@ -118,7 +123,7 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 900;
 }
-@media (min-width:1024px) {
+@media (min-width:1025px) {
   .tabbar { display: none; }
 }
 .tabbar-item { display:flex; flex-direction:column; align-items:center; gap:var(--space-1); text-decoration:none; color:var(--color-text-muted); }
