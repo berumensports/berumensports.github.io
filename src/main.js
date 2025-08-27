@@ -3,7 +3,15 @@ import { renderShell } from './core/shell.js';
 import { onAuth, login, logout, fetchUserRole } from './core/auth.js';
 import { initRouter } from './core/router.js';
 
-renderShell();
+function hideShell() {
+  document.querySelector('.topbar')?.setAttribute('hidden', '');
+  document.querySelector('.tabbar')?.setAttribute('hidden', '');
+}
+
+function showShell() {
+  document.querySelector('.topbar')?.removeAttribute('hidden');
+  document.querySelector('.tabbar')?.removeAttribute('hidden');
+}
 
 function showLogin() {
   const app = document.getElementById('app');
@@ -16,8 +24,11 @@ function showLogin() {
 
 onAuth(async user => {
   if (!user) {
+    hideShell();
     showLogin();
   } else {
+    renderShell();
+    showShell();
     const role = await fetchUserRole(user.uid);
     if (role) {
       initRouter();
