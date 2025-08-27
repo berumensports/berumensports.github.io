@@ -63,7 +63,7 @@ export async function render(el) {
 
 async function openCobro(id) {
   const isEdit = !!id;
-  const [paSnap, taSnap, coSnap] = await Promise.all([
+  const [paSnap, taSnap, coSnap, eqSnap] = await Promise.all([
     getDocs(query(
       collection(db, paths.partidos()),
       where('ligaId','==',LIGA_ID),
@@ -71,12 +71,14 @@ async function openCobro(id) {
       orderBy('fecha','desc')
     )),
     getDocs(query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID))),
-    isEdit ? getDoc(doc(db, paths.cobros(), id)) : Promise.resolve(null)
+    isEdit ? getDoc(doc(db, paths.cobros(), id)) : Promise.resolve(null),
+    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)))
   ]);
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());
+  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
   const existing = coSnap?.exists() ? coSnap.data() : { partidoId: '', monto: '', tarifa: 0 };
-  const paOpts = partidos.map(p => `<option value="${p.id}" data-rama="${p.rama}" data-categoria="${p.categoria}">${p.localId} vs ${p.visitaId}</option>`).join('');
+  const paOpts = partidos.map(p => `<option value="${p.id}" data-rama="${p.rama}" data-categoria="${p.categoria}">${equipos[p.localId] || p.localId} vs ${equipos[p.visitaId] || p.visitaId}</option>`).join('');
   openModal(`<form id="co-form" class="modal-form">
     <label class="field"><span class="label">Partido</span><select name="partido" class="input"><option value="">Partido</option>${paOpts}</select></label>
     <label class="field"><span class="label">Tarifa</span><input name="tarifa" class="input" disabled></label>
