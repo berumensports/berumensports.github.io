@@ -141,8 +141,10 @@ async function openCobro(id, partidoId) {
   form.partido.addEventListener('change', updateTarifa);
   form.partido.value = existing.partidoId || partidoId || '';
   updateTarifa();
-  form.tarifa.value = fmt.format(existing.tarifa || 0);
-  form.tarifa.dataset.raw = existing.tarifa || 0;
+  if (existing.tarifa) {
+    form.tarifa.value = fmt.format(existing.tarifa);
+    form.tarifa.dataset.raw = existing.tarifa;
+  }
   form.monto.value = existing.monto || '';
   form.addEventListener('submit', async e => {
     e.preventDefault();
