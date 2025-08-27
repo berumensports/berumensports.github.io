@@ -28,14 +28,18 @@ function formatPhone(value) {
 function openArbitro() {
   openModal(`
     <form id="ar-form" class="modal-form">
-      <input name="nombre" placeholder="Nombre">
-      <input name="telefono" placeholder="Teléfono/Whatsapp">
+      <input name="nombre" placeholder="Nombre" required>
+      <input name="telefono" placeholder="Teléfono/Whatsapp" required>
       <button>Guardar</button>
     </form>`);
   document.getElementById('ar-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const nombre = e.target.nombre.value;
+    const nombre = e.target.nombre.value.trim();
     const telefono = formatPhone(e.target.telefono.value);
+    if (!nombre) {
+      alert('Nombre es requerido');
+      return;
+    }
     if (!telefono) {
       alert('Teléfono debe tener 10 dígitos');
       return;
