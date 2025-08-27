@@ -7,6 +7,7 @@ export const paths = {
   equipos: () => 'equipos',
   arbitros: () => 'arbitros',
   tarifas: () => 'tarifas',
+  jornadas: () => 'jornadas',
   partidos: () => 'partidos',
   cobros: () => 'cobros',
   diagnostics: () => 'diagnostics',

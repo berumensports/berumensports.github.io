@@ -40,6 +40,15 @@ export function updateArbitro(id, data) {
 export function deleteArbitro(id) {
   return safeWrite(() => deleteDoc(doc(db, paths.arbitros(), id)), 'deleteArbitro');
 }
+export function addJornada(data) {
+  return safeWrite(() => addDoc(collection(db, paths.jornadas()), { ...data, torneoId: getActiveTorneo() }), 'addJornada');
+}
+export function updateJornada(id, data) {
+  return safeWrite(() => updateDoc(doc(db, paths.jornadas(), id), data), 'updateJornada');
+}
+export function deleteJornada(id) {
+  return safeWrite(() => deleteDoc(doc(db, paths.jornadas(), id)), 'deleteJornada');
+}
 export function addPartido(data) {
   return safeWrite(() => addDoc(collection(db, paths.partidos()), { ...data, torneoId: getActiveTorneo(), tempId: TEMP_ID }), 'addPartido');
 }

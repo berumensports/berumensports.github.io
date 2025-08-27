@@ -21,18 +21,20 @@ export async function render(el) {
       <div id="lists"></div>
     </div>`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
-  const [eqSnap, paSnap, taSnap] = await Promise.all([
+  const [eqSnap, paSnap, taSnap, joSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
       where('torneoId','==',getActiveTorneo()),
       where('tempId','==',TEMP_ID)
     )),
-    getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo())))
+    getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo())))
   ]);
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());
+  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
   function tarifaPorPartido(pa) {
     return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
   }
@@ -46,7 +48,7 @@ export async function render(el) {
   const unsub = onSnapshot(q, snap => {
     const cobros = {};
     snap.docs.forEach(d => { cobros[d.data().partidoId] = { id: d.id, ...d.data() }; });
-    const grupos = { pendientes: [], parciales: [], pagados: [] };
+    const grupos = {};
     partidos.forEach(pa => {
       const co = cobros[pa.id] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
@@ -71,14 +73,12 @@ export async function render(el) {
         <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
         ${isAdmin?`<td data-label="Acciones">${renderCobroActions(co.id, pa.id)}</td>`:''}
       </tr>`;
-      if (!monto) grupos.pendientes.push(row);
-      else if (monto < tarifa) grupos.parciales.push(row);
-      else grupos.pagados.push(row);
+      const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
+      if (!grupos[jornada]) grupos[jornada] = [];
+      grupos[jornada].push(row);
     });
     const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Rama</th><th class="desktop-only">Categoría</th><th>Equipos</th><th>Fecha</th><th class="desktop-only">Hora</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
-    const html = renderGrupo('Pendientes', grupos.pendientes) +
-                 renderGrupo('Parciales', grupos.parciales) +
-                 renderGrupo('Pagados', grupos.pagados);
+    const html = Object.keys(grupos).sort().map(j => renderGrupo(j, grupos[j])).join('');
     document.getElementById('lists').innerHTML = html || '<p>No hay partidos</p>';
   });
   pushCleanup(() => unsub());
