@@ -13,27 +13,29 @@ export async function render(el) {
     <div class="card">
       <div class="page-header">
         <h1 class="h1">Cobros</h1>
-        ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
       </div>
       <div class="toolbar">
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <div id="lists"></div>
-    </div>
-    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo cobro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+    </div>`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
-
-  const [eqSnap, paSnap] = await Promise.all([
+  const [eqSnap, paSnap, taSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
       where('torneoId','==',getActiveTorneo()),
       where('tempId','==',TEMP_ID)
-    ))
+    )),
+    getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo())))
   ]);
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
-  const partidos = Object.fromEntries(paSnap.docs.map(d => [d.id, d.data()]));
+  const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const tarifas = taSnap.docs.map(d => d.data());
+  function tarifaPorPartido(pa) {
+    return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
+  }
 
   const q = query(
     collection(db, paths.cobros()),
@@ -42,20 +44,21 @@ export async function render(el) {
     orderBy('fechaCobro','desc')
   );
   const unsub = onSnapshot(q, snap => {
+    const cobros = {};
+    snap.docs.forEach(d => { cobros[d.data().partidoId] = { id: d.id, ...d.data() }; });
     const grupos = { pendientes: [], parciales: [], pagados: [] };
-    snap.docs.forEach(d => {
-      const data = d.data();
-      const pa = partidos[data.partidoId] || {};
+    partidos.forEach(pa => {
+      const co = cobros[pa.id] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
       const local = equipos[pa.localId] || pa.localId || '';
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
-      const tarifa = Number(data.tarifa || 0);
-      const monto = Number(data.monto || 0);
+      const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
+      const monto = Number(co.monto || 0);
       let status, badgeClass;
       if (!monto) { status = 'Pendiente'; badgeClass = 'badge-danger'; }
-      else if (monto < tarifa) { status = 'Pago parcial'; badgeClass = 'badge-warning'; }
+      else if (monto < tarifa) { status = 'Parcial'; badgeClass = 'badge-warning'; }
       else { status = 'Pagado'; badgeClass = 'badge-success'; }
       const row = `<tr>
         <td data-label="Rama y Categoría"><span class="desktop-only">${pa.rama || ''}</span><span class="mobile-only">${pa.rama || ''} ${pa.categoria || ''}</span></td>
@@ -66,7 +69,7 @@ export async function render(el) {
         <td data-label="Tarifa">${fmt.format(tarifa)}</td>
         <td data-label="Monto">${fmt.format(monto)}</td>
         <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
-        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+        ${isAdmin?`<td data-label="Acciones">${renderCobroActions(co.id, pa.id)}</td>`:''}
       </tr>`;
       if (!monto) grupos.pendientes.push(row);
       else if (monto < tarifa) grupos.parciales.push(row);
@@ -74,20 +77,31 @@ export async function render(el) {
     });
     const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Rama</th><th class="desktop-only">Categoría</th><th>Equipos</th><th>Fecha</th><th class="desktop-only">Hora</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
     const html = renderGrupo('Pendientes', grupos.pendientes) +
-                 renderGrupo('Pagados Parcialmente', grupos.parciales) +
+                 renderGrupo('Parciales', grupos.parciales) +
                  renderGrupo('Pagados', grupos.pagados);
-    document.getElementById('lists').innerHTML = html || '<p>No hay cobros</p>';
+    document.getElementById('lists').innerHTML = html || '<p>No hay partidos</p>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
-    const open = (id) => openCobro(id);
-    document.getElementById('nuevo')?.addEventListener('click', () => open());
-    document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
-    attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete: id=>deleteCobro(id) }, true);
+    const open = (id) => {
+      if (id.startsWith('partido:')) openCobro(null, id.split(':')[1]);
+      else openCobro(id);
+    };
+    const onDelete = id => { if (!id.startsWith('partido:')) deleteCobro(id); };
+    attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete }, true);
   }
 }
 
-async function openCobro(id) {
+function renderCobroActions(cobroId, partidoId) {
+  if (cobroId) return renderActions(cobroId);
+  return `<span class="row-actions">
+    <button class="icon-btn" data-action="edit" data-id="partido:${partidoId}" aria-label="Registrar cobro">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
+    </button>
+  </span>`;
+}
+
+async function openCobro(id, partidoId) {
   const isEdit = !!id;
   const [paSnap, taSnap, coSnap, eqSnap] = await Promise.all([
     getDocs(query(
@@ -125,7 +139,7 @@ async function openCobro(id) {
     form.tarifa.dataset.raw = tarifa;
   }
   form.partido.addEventListener('change', updateTarifa);
-  form.partido.value = existing.partidoId || '';
+  form.partido.value = existing.partidoId || partidoId || '';
   updateTarifa();
   form.tarifa.value = fmt.format(existing.tarifa || 0);
   form.tarifa.dataset.raw = existing.tarifa || 0;
