@@ -55,12 +55,18 @@ export async function render(el) {
       if (!monto) { status = 'Pendiente'; badgeClass = 'badge-danger'; }
       else if (monto < tarifa) { status = 'Pago parcial'; badgeClass = 'badge-warning'; }
       else { status = 'Pagado'; badgeClass = 'badge-success'; }
-      const row = `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(tarifa)}</td><td>${fmt.format(monto)}</td><td><span class="badge ${badgeClass}">${status}</span></td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      const row = `<tr>
+        <td data-label="Partido">${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td>
+        <td data-label="Tarifa">${fmt.format(tarifa)}</td>
+        <td data-label="Monto">${fmt.format(monto)}</td>
+        <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
+        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+      </tr>`;
       if (!monto) grupos.pendientes.push(row);
       else if (monto < tarifa) grupos.parciales.push(row);
       else grupos.pagados.push(row);
     });
-    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table>${rows.join('')}</table>` : '';
+    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Partido</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
     const html = renderGrupo('Pendientes', grupos.pendientes) +
                  renderGrupo('Pagados Parcialmente', grupos.parciales) +
                  renderGrupo('Pagados', grupos.pagados);

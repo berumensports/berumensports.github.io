@@ -18,16 +18,22 @@ export async function render(el) {
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
-      <table id="list"></table>
+      <table class="responsive-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const q = query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
-      return `<tr><td>${data.nombre}</td><td>${data.telefono||''}</td><td>${data.email||''}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      return `<tr>
+        <td data-label="Nombre">${data.nombre}</td>
+        <td data-label="Teléfono">${data.telefono||''}</td>
+        <td data-label="Email">${data.email||''}</td>
+        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+      </tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay árbitros</td></tr>';
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?4:3}">No hay árbitros</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {

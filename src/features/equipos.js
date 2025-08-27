@@ -8,7 +8,7 @@ import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Equipos</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table id="list"></table></div>`;
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Equipos</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table class="responsive-table"><thead><tr><th>Nombre</th><th>Rama</th><th>Categoría</th><th>Delegación</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table></div>`;
   const delSnap = await getDocs(query(collection(db, paths.delegaciones()), where('ligaId','==',LIGA_ID), orderBy('nombre')));
   const delegMap = {};
   delSnap.forEach(d => { delegMap[d.id] = d.data().nombre; });
@@ -16,9 +16,16 @@ export async function render(el) {
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
-      return `<tr><td>${data.nombre}</td><td>${data.rama||''}</td><td>${data.categoria||''}</td><td>${delegMap[data.delegacionId]||''}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      return `<tr>
+        <td data-label="Nombre">${data.nombre}</td>
+        <td data-label="Rama">${data.rama||''}</td>
+        <td data-label="Categoría">${data.categoria||''}</td>
+        <td data-label="Delegación">${delegMap[data.delegacionId]||''}</td>
+        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+      </tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay equipos</td></tr>';
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?5:4}">No hay equipos</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {

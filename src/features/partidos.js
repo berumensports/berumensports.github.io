@@ -18,7 +18,7 @@ export async function render(el) {
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
-      <table id="list"></table>
+      <table class="responsive-table"><thead><tr><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)));
@@ -33,9 +33,14 @@ export async function render(el) {
       const visita = equipos[data.visitaId] || data.visitaId;
       const marcador = data.jugado && data.marcadorLocal != null && data.marcadorVisita != null ?
         ` (${data.marcadorLocal}-${data.marcadorVisita})` : '';
-      return `<tr><td>${fecha}</td><td>${local} vs ${visita}${marcador}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      return `<tr>
+        <td data-label="Fecha">${fecha}</td>
+        <td data-label="Partido">${local} vs ${visita}${marcador}</td>
+        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+      </tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay partidos</td></tr>';
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?3:2}">No hay partidos</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
