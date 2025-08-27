@@ -17,7 +17,7 @@ export async function render(el) {
   if (isAdmin) document.getElementById('nuevo').addEventListener('click', () => openCobro());
 }
 function openCobro() {
-  openModal(`<form id="co-form"><input name="partido" placeholder="PartidoId"><input name="monto" type="number" placeholder="Monto"><button>Guardar</button></form>`);
+  openModal(`<form id="co-form" class="modal-form"><input name="partido" placeholder="PartidoId"><input name="monto" type="number" placeholder="Monto"><button>Guardar</button></form>`);
   document.getElementById('co-form').addEventListener('submit', async e => {
     e.preventDefault();
     await addCobro({ partidoId: e.target.partido.value, monto: Number(e.target.monto.value), pagado:false });

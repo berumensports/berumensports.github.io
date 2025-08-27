@@ -19,3 +19,23 @@ input, select {
   padding:var(--space);
   margin:var(--space) 0;
 }
+
+.modal-sheet {
+  background:#fff;
+  width:100%;
+  border-radius:var(--radius) var(--radius) 0 0;
+  box-shadow:var(--shadow);
+  padding:var(--space);
+  max-height:90%;
+  overflow:auto;
+}
+
+.modal-form {
+  display:flex;
+  flex-direction:column;
+  gap:var(--space);
+}
+
+.modal-form > * {
+  width:100%;
+}

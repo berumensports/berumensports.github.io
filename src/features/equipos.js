@@ -32,7 +32,7 @@ function openEquipo(id, delegaciones) {
   const ramaOpts = ['Varonil','Femenil'].map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = Array.from({length: 2020-2009+1}, (_,i)=>2009+i).map(y => `<option value="${y}">${y}</option>`).join('');
   const delOpts = Object.entries(delegaciones).map(([did,name]) => `<option value="${did}">${name}</option>`).join('');
-  openModal(`<form id="eq-form"><input name="nombre" placeholder="Nombre"><select name="rama">${ramaOpts}</select><select name="categoria">${catOpts}</select><select name="delegacionId">${delOpts}</select><button>Guardar</button></form>`);
+  openModal(`<form id="eq-form" class="modal-form"><input name="nombre" placeholder="Nombre"><select name="rama">${ramaOpts}</select><select name="categoria">${catOpts}</select><select name="delegacionId">${delOpts}</select><button>Guardar</button></form>`);
   const form = document.getElementById('eq-form');
   form.addEventListener('submit', async e => {
     e.preventDefault();

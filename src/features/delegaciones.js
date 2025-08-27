@@ -23,7 +23,7 @@ export async function render(el) {
 
 function openDelegacion(id) {
   const isEdit = !!id;
-  openModal(`<form id="del-form"><input name="nombre" placeholder="Nombre"><button>Guardar</button></form>`);
+  openModal(`<form id="del-form" class="modal-form"><input name="nombre" placeholder="Nombre"><button>Guardar</button></form>`);
   const form = document.getElementById('del-form');
   form.addEventListener('submit', async e => {
     e.preventDefault();

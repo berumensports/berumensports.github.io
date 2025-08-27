@@ -17,7 +17,7 @@ export async function render(el) {
   if (isAdmin) document.getElementById('nuevo').addEventListener('click', () => openArbitro());
 }
 function openArbitro() {
-  openModal(`<form id="ar-form"><input name="nombre" placeholder="Nombre"><button>Guardar</button></form>`);
+  openModal(`<form id="ar-form" class="modal-form"><input name="nombre" placeholder="Nombre"><button>Guardar</button></form>`);
   document.getElementById('ar-form').addEventListener('submit', async e => {
     e.preventDefault();
     await addArbitro({ nombre: e.target.nombre.value });
