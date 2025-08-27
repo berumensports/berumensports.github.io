@@ -7,44 +7,59 @@ import { getUserRole } from '../core/auth.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><h2>Árbitros</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<ul id="list"></ul></div>`;
+  el.innerHTML = `
+    <div class="card">
+      <div class="page-header">
+        <h1 class="h1">Árbitros</h1>
+        ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
+      </div>
+      <div class="toolbar">
+        <input id="buscar" class="input" placeholder="Buscar">
+        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
+      </div>
+      <table id="list"></table>
+    </div>
+    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const q = query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
-      return `<li>${data.nombre}${data.telefono ? ' - ' + data.telefono : ''}</li>`;
+      return `<tr><td>${data.nombre}</td><td>${data.telefono||''}</td><td>${data.email||''}</td></tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<li>No hay árbitros</li>';
+    document.getElementById('list').innerHTML = rows || '<tr><td>No hay árbitros</td></tr>';
   });
   pushCleanup(() => unsub());
-  if (isAdmin) document.getElementById('nuevo').addEventListener('click', () => openArbitro());
+  if (isAdmin) {
+    const open = () => openArbitro();
+    document.getElementById('nuevo')?.addEventListener('click', open);
+    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+  }
 }
+
 function formatPhone(value) {
   const digits = value.replace(/\D/g, '');
-  if (digits.length !== 10) return null;
+  if (!digits) return '';
+  if (digits.length !== 10) return value;
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)} ${digits.slice(6)}`;
 }
 
 function openArbitro() {
   openModal(`
     <form id="ar-form" class="modal-form">
-      <input name="nombre" placeholder="Nombre" required>
-      <input name="telefono" placeholder="Teléfono/Whatsapp" required>
-      <button>Guardar</button>
+      <label class="field"><span class="label">Nombre</span><input name="nombre" class="input" required></label>
+      <label class="field"><span class="label">Teléfono</span><input name="telefono" class="input" placeholder="10 dígitos"></label>
+      <label class="field"><span class="label">Email</span><input name="email" type="email" class="input" placeholder="Email"></label>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
     </form>`);
-  document.getElementById('ar-form').addEventListener('submit', async e => {
+  const form = document.getElementById('ar-form');
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const nombre = e.target.nombre.value.trim();
-    const telefono = formatPhone(e.target.telefono.value);
-    if (!nombre) {
-      alert('Nombre es requerido');
-      return;
-    }
-    if (!telefono) {
-      alert('Teléfono debe tener 10 dígitos');
-      return;
-    }
-    await addArbitro({ nombre, telefono });
+    const data = {
+      nombre: form.nombre.value.trim(),
+      telefono: formatPhone(form.telefono.value),
+      email: form.email.value.trim()
+    };
+    await addArbitro(data);
     closeModal();
   });
 }
