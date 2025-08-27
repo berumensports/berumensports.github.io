@@ -1,4 +1,4 @@
-# Berumen Sports Admin
+# Berumen Sports
 
 SPA simple para administrar liga Berumen usando Firebase y GitHub Pages.
 
