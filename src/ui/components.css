@@ -141,7 +141,7 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 .modal-footer { display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-4); }
 .modal-form { display:flex; flex-direction:column; gap:var(--space-4); }
 
-@media (min-width:1024px) {
+@media (min-width:1025px) {
   .modal-sheet {
     max-width:60vw;
     left:50%;

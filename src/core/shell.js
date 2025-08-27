@@ -6,10 +6,10 @@ const shellHtml = `
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#menu"></use></svg>
   </button>
   <div id="user-info" class="topbar-title">Berumen <span id="user-role" class="chip"></span></div>
-  <select id="torneo-switch" class="input"></select>
   <button id="logout-btn" class="icon-btn" onclick="appLogout()" aria-label="Configuración" hidden>
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#settings"></use></svg>
   </button>
+  <select id="torneo-switch" class="input"></select>
 </header>
 <nav id="drawer" class="drawer" hidden>
   <ul>
