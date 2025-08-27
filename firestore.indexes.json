@@ -47,6 +47,15 @@
         {"fieldPath":"ligaId","order":"ASCENDING"},
         {"fieldPath":"nombre","order":"ASCENDING"}
       ]
+    },
+    {
+      "collectionGroup": "tarifas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"rama","order":"ASCENDING"},
+        {"fieldPath":"categoria","order":"ASCENDING"}
+      ]
     }
   ],
   "fieldOverrides": []

@@ -11,6 +11,7 @@ const shellHtml = `
   <a href="#/arbitros">Árbitros</a>
   <a href="#/partidos">Partidos</a>
   <a href="#/cobros">Cobros</a>
+  <a href="#/tarifas">Tarifas</a>
   <a href="#/reportes">Reportes</a>
 </nav>
 <div id="drawer-overlay" hidden></div>

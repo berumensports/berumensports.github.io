@@ -42,6 +42,9 @@ export function updatePartido(id, data) {
 export function addCobro(data) {
   return safeWrite(() => addDoc(collection(db, paths.cobros()), { ...data, ligaId: LIGA_ID, tempId: TEMP_ID }), 'addCobro');
 }
+export function addTarifa(data) {
+  return safeWrite(() => addDoc(collection(db, paths.tarifas()), { ...data, ligaId: LIGA_ID }), 'addTarifa');
+}
 export function addDiagnostic(note, byUid) {
   return safeWrite(() => addDoc(collection(db, paths.diagnostics()), { note, byUid, createdAt: Date.now(), ligaId: LIGA_ID }), 'addDiagnostic');
 }
