@@ -79,6 +79,8 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 }
 .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); }
 
+/* Toolbar */
+.toolbar { display:flex; flex-wrap:wrap; gap:var(--space-3); align-items:center; margin-bottom:var(--space-4); }
 /* Chips & Badges */
 .chip, .badge {
   display:inline-block;

@@ -7,7 +7,19 @@ import { getUserRole } from '../core/auth.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><h2>Cobros</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<ul id="list"></ul></div>`;
+  el.innerHTML = `
+    <div class="card">
+      <div class="page-header">
+        <h1 class="h1">Cobros</h1>
+        ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
+      </div>
+      <div class="toolbar">
+        <input id="buscar" class="input" placeholder="Buscar">
+        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
+      </div>
+      <table id="list"></table>
+    </div>
+    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo cobro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
 
   const [eqSnap, paSnap] = await Promise.all([
@@ -32,17 +44,19 @@ export async function render(el) {
       const data = d.data();
       const pa = partidos[data.partidoId] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
-      const fecha = fechaObj
-        ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}`
-        : '';
+      const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
       const local = equipos[pa.localId] || pa.localId || '';
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
-      return `<li>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha} - Tarifa ${fmt.format(data.tarifa || 0)} - Monto ${fmt.format(data.monto || 0)}</li>`;
+      return `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(data.tarifa||0)}</td><td>${fmt.format(data.monto||0)}</td></tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<li>No hay cobros</li>';
+    document.getElementById('list').innerHTML = rows || '<tr><td>No hay cobros</td></tr>';
   });
   pushCleanup(() => unsub());
-  if (isAdmin) document.getElementById('nuevo').addEventListener('click', () => openCobro());
+  if (isAdmin) {
+    const open = () => openCobro();
+    document.getElementById('nuevo')?.addEventListener('click', open);
+    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+  }
 }
 
 async function openCobro() {
@@ -59,10 +73,10 @@ async function openCobro() {
   const tarifas = taSnap.docs.map(d => d.data());
   const paOpts = partidos.map(p => `<option value="${p.id}" data-rama="${p.rama}" data-categoria="${p.categoria}">${p.localId} vs ${p.visitaId}</option>`).join('');
   openModal(`<form id="co-form" class="modal-form">
-    <select name="partido"><option value="">Partido</option>${paOpts}</select>
-    <input name="tarifa" placeholder="Tarifa" disabled>
-    <input name="monto" type="number" min="0" step="1" placeholder="Cobro">
-    <button>Guardar</button>
+    <label class="field"><span class="label">Partido</span><select name="partido" class="input"><option value="">Partido</option>${paOpts}</select></label>
+    <label class="field"><span class="label">Tarifa</span><input name="tarifa" class="input" disabled></label>
+    <label class="field"><span class="label">Monto</span><input name="monto" type="number" min="0" step="1" class="input" placeholder="Cobro"></label>
+    <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
   </form>`);
   const form = document.getElementById('co-form');
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
