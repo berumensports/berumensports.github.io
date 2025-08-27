@@ -5,6 +5,7 @@ const routes = {
   '/arbitros': () => import('../features/arbitros.js'),
   '/partidos': () => import('../features/partidos.js'),
   '/cobros': () => import('../features/cobros.js'),
+  '/tarifas': () => import('../features/tarifas.js'),
   '/reportes': () => import('../features/reportes.js'),
 };
 
