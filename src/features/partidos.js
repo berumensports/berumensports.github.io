@@ -54,9 +54,10 @@ export async function render(el) {
 
 async function openPartido(id) {
   const isEdit = !!id;
-  const [eqSnap, arSnap, paSnap] = await Promise.all([
+  const [eqSnap, arSnap, joSnap, paSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     isEdit ? getDoc(doc(db, paths.partidos(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -65,7 +66,8 @@ async function openPartido(id) {
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const arOpts = arSnap.docs.map(d => `<option value="${d.id}">${d.data().nombre}</option>`).join('');
-  const existing = paSnap?.exists() ? paSnap.data() : { fecha: null, rama: '', categoria: '', localId: '', visitaId: '', arbitroId: '' };
+  const jornadaOpts = joSnap.docs.map(d => `<option value="${d.id}">${d.data().nombre}</option>`).join('');
+  const existing = paSnap?.exists() ? paSnap.data() : { fecha: null, rama: '', categoria: '', localId: '', visitaId: '', arbitroId: '', jornadaId: '' };
   const canScore = isEdit && existing.fecha && new Date(existing.fecha.seconds * 1000) <= new Date();
   const scoreFields = canScore ? `
     <label class="field"><span class="label">Partido jugado</span><input name="jugado" type="checkbox"></label>
@@ -73,6 +75,7 @@ async function openPartido(id) {
     <label class="field" id="marcador-visita-wrap" hidden><span class="label">Marcador Visitante</span><input name="marcadorVisita" type="number" class="input" min="0"></label>` : '';
   openModal(`<form id="pa-form" class="modal-form">
     <label class="field"><span class="label">Fecha</span><input name="fecha" type="datetime-local" class="input"></label>
+    <label class="field"><span class="label">Jornada</span><select name="jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select></label>
     <label class="field"><span class="label">Rama</span><select name="rama" class="input"><option value="">Rama</option>${ramaOpts}</select></label>
     <label class="field"><span class="label">Categoría</span><select name="categoria" class="input"><option value="">Categoría</option>${catOpts}</select></label>
     <label class="field" id="local-wrap" hidden><span class="label">Local</span><select name="local" class="input"></select></label>
@@ -115,6 +118,7 @@ async function openPartido(id) {
     form.local.value = existing.localId || '';
     form.visita.value = existing.visitaId || '';
     form.arbitro.value = existing.arbitroId || '';
+    form.jornada.value = existing.jornadaId || '';
   }
   if (canScore) {
     const toggleScores = () => {
@@ -135,7 +139,8 @@ async function openPartido(id) {
       categoria: form.categoria.value,
       localId: form.local.value,
       visitaId: form.visita.value,
-      arbitroId: form.arbitro.value
+      arbitroId: form.arbitro.value,
+      jornadaId: form.jornada.value
     };
     if (canScore) {
       data.jugado = form.jugado.checked;

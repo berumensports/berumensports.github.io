@@ -18,6 +18,7 @@ const shellHtml = `
     <li><a href="#/delegaciones"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Delegaciones</span></a></li>
     <li><a href="#/equipos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#users"></use></svg><span>Equipos</span></a></li>
     <li><a href="#/partidos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#calendar"></use></svg><span>Partidos</span></a></li>
+    <li><a href="#/jornadas"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#calendar"></use></svg><span>Jornadas</span></a></li>
     <li><a href="#/cobros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Cobros</span></a></li>
     <li><a href="#/tarifas"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Tarifas</span></a></li>
     <li><a href="#/arbitros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Árbitros</span></a></li>
