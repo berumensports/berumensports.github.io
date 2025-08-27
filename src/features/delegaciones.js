@@ -8,11 +8,12 @@ import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Delegaciones</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table id="list"></table></div>`;
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Delegaciones</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table class="responsive-table"><thead><tr><th>Nombre</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table></div>`;
   const q = query(collection(db, paths.delegaciones()), where('ligaId','==',LIGA_ID), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
-    const rows = snap.docs.map(d => `<tr><td>${d.data().nombre}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay delegaciones</td></tr>';
+    const rows = snap.docs.map(d => `<tr><td data-label="Nombre">${d.data().nombre}</td>${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}</tr>`).join('');
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?2:1}">No hay delegaciones</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {

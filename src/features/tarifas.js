@@ -18,7 +18,7 @@ export async function render(el) {
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
-      <table id="list"></table>
+      <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const q = query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID), orderBy('rama'), orderBy('categoria'));
@@ -26,9 +26,15 @@ export async function render(el) {
     const rows = snap.docs.map(d => {
       const data = d.data();
       const monto = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(data.tarifa);
-      return `<tr><td>${data.rama}</td><td>${data.categoria}</td><td>${monto}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      return `<tr>
+        <td data-label="Rama">${data.rama}</td>
+        <td data-label="Categoría">${data.categoria}</td>
+        <td data-label="Tarifa">${monto}</td>
+        ${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}
+      </tr>`;
     }).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay tarifas</td></tr>';
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?4:3}">No hay tarifas</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
