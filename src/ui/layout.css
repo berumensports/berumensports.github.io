@@ -1,5 +1,6 @@
+/* Layout tokens */
 :root {
-  --topbar-h: 56px;
+  --topbar-h: 100px;
   --tabbar-h: 60px;
 }
 
@@ -44,6 +45,24 @@ body {
   justify-content: space-between;
   padding: 0 var(--space-4);
   z-index: 1000;
+  flex-wrap: wrap;
+}
+
+#torneo-switch {
+  flex: 0 0 100%;
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+@media (min-width:1024px) {
+  .topbar {
+    flex-wrap: nowrap;
+  }
+  #torneo-switch {
+    flex: 0 0 auto;
+    width: auto;
+    margin-top: 0;
+  }
 }
 
 .topbar-title {
