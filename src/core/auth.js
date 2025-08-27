@@ -8,8 +8,6 @@ import {
   getDoc,
   setDoc,
 } from '../data/firebase.js';
-
-const LIGA_ID = 'BERUMEN';
 let cachedRole = null;
 let cachedName = null;
 
@@ -25,7 +23,7 @@ export async function fetchUserInfo(uid) {
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, { role: 'consulta', ligaId: LIGA_ID });
+      await setDoc(ref, { role: 'consulta' });
       cachedRole = 'consulta';
       cachedName = '';
     } else {

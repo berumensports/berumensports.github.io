@@ -1,5 +1,5 @@
-import { db, collection, query, where, onSnapshot, orderBy, doc, getDoc } from '../data/firebase.js';
-import { paths, LIGA_ID } from '../data/paths.js';
+import { db, collection, query, onSnapshot, orderBy, doc, getDoc } from '../data/firebase.js';
+import { paths } from '../data/paths.js';
 import { addArbitro, updateArbitro, deleteArbitro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
@@ -21,7 +21,7 @@ export async function render(el) {
       <table class="responsive-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const q = query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre'));
+  const q = query(collection(db, paths.arbitros()), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();

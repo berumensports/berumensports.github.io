@@ -1,5 +1,6 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
-import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
+import { paths, TEMP_ID } from '../data/paths.js';
+import { getActiveTorneo } from '../data/torneos.js';
 import { addPartido, updatePartido, deletePartido } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
@@ -21,9 +22,9 @@ export async function render(el) {
       <table class="responsive-table"><thead><tr><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)));
+  const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo())));
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
-  const q = query(collection(db, paths.partidos()), where('ligaId','==',LIGA_ID), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
+  const q = query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
@@ -54,8 +55,8 @@ export async function render(el) {
 async function openPartido(id) {
   const isEdit = !!id;
   const [eqSnap, arSnap, paSnap] = await Promise.all([
-    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID), orderBy('nombre'))),
-    getDocs(query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre'))),
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
+    getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
     isEdit ? getDoc(doc(db, paths.partidos(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));

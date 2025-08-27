@@ -1,5 +1,6 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
-import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
+import { paths, TEMP_ID } from '../data/paths.js';
+import { getActiveTorneo } from '../data/torneos.js';
 import { addCobro, updateCobro, deleteCobro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
@@ -24,10 +25,10 @@ export async function render(el) {
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
 
   const [eqSnap, paSnap] = await Promise.all([
-    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID))),
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
-      where('ligaId','==',LIGA_ID),
+      where('torneoId','==',getActiveTorneo()),
       where('tempId','==',TEMP_ID)
     ))
   ]);
@@ -36,7 +37,7 @@ export async function render(el) {
 
   const q = query(
     collection(db, paths.cobros()),
-    where('ligaId','==',LIGA_ID),
+    where('torneoId','==',getActiveTorneo()),
     where('tempId','==',TEMP_ID),
     orderBy('fechaCobro','desc')
   );
@@ -91,13 +92,13 @@ async function openCobro(id) {
   const [paSnap, taSnap, coSnap, eqSnap] = await Promise.all([
     getDocs(query(
       collection(db, paths.partidos()),
-      where('ligaId','==',LIGA_ID),
+      where('torneoId','==',getActiveTorneo()),
       where('tempId','==',TEMP_ID),
       orderBy('fecha','desc')
     )),
-    getDocs(query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID))),
+    getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()))),
     isEdit ? getDoc(doc(db, paths.cobros(), id)) : Promise.resolve(null),
-    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)))
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo())))
   ]);
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());

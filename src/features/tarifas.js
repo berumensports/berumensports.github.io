@@ -1,5 +1,6 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
-import { paths, LIGA_ID } from '../data/paths.js';
+import { paths } from '../data/paths.js';
+import { getActiveTorneo } from '../data/torneos.js';
 import { addTarifa, updateTarifa, deleteTarifa } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
@@ -21,7 +22,7 @@ export async function render(el) {
       <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const q = query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID), orderBy('rama'), orderBy('categoria'));
+  const q = query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()), orderBy('rama'), orderBy('categoria'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
@@ -48,7 +49,7 @@ export async function render(el) {
 async function openTarifa(id) {
   const isEdit = !!id;
   const [eqSnap, taSnap] = await Promise.all([
-    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID))),
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     isEdit ? getDoc(doc(db, paths.tarifas(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => d.data());
