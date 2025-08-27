@@ -1,9 +1,10 @@
 import { db, collection, query, where, onSnapshot, orderBy } from '../data/firebase.js';
 import { paths, LIGA_ID } from '../data/paths.js';
-import { addArbitro } from '../data/repo.js';
+import { addArbitro, updateArbitro, deleteArbitro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
+import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -24,15 +25,16 @@ export async function render(el) {
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
-      return `<tr><td>${data.nombre}</td><td>${data.telefono||''}</td><td>${data.email||''}</td></tr>`;
+      return `<tr><td>${data.nombre}</td><td>${data.telefono||''}</td><td>${data.email||''}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<tr><td>No hay árbitros</td></tr>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
-    const open = () => openArbitro();
-    document.getElementById('nuevo')?.addEventListener('click', open);
-    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+    const open = (id) => openArbitro(id);
+    document.getElementById('nuevo')?.addEventListener('click', () => open());
+    document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
+    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deleteArbitro(id) }, true);
   }
 }
 
@@ -43,7 +45,8 @@ function formatPhone(value) {
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)} ${digits.slice(6)}`;
 }
 
-function openArbitro() {
+function openArbitro(id) {
+  const isEdit = !!id;
   openModal(`
     <form id="ar-form" class="modal-form">
       <label class="field"><span class="label">Nombre</span><input name="nombre" class="input" required></label>
@@ -59,7 +62,7 @@ function openArbitro() {
       telefono: formatPhone(form.telefono.value),
       email: form.email.value.trim()
     };
-    await addArbitro(data);
+    if (isEdit) await updateArbitro(id, data); else await addArbitro(data);
     closeModal();
   });
 }

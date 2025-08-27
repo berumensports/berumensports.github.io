@@ -1,9 +1,10 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
 import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
-import { addPartido } from '../data/repo.js';
+import { addPartido, updatePartido, deletePartido } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
+import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -30,19 +31,21 @@ export async function render(el) {
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
       const local = equipos[data.localId] || data.localId;
       const visita = equipos[data.visitaId] || data.visitaId;
-      return `<tr><td>${fecha}</td><td>${local} vs ${visita}</td></tr>`;
+      return `<tr><td>${fecha}</td><td>${local} vs ${visita}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<tr><td>No hay partidos</td></tr>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
-    const open = () => openPartido();
-    document.getElementById('nuevo')?.addEventListener('click', open);
-    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+    const open = (id) => openPartido(id);
+    document.getElementById('nuevo')?.addEventListener('click', () => open());
+    document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
+    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deletePartido(id) }, true);
   }
 }
 
-async function openPartido() {
+async function openPartido(id) {
+  const isEdit = !!id;
   const [eqSnap, arSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID), orderBy('nombre'))),
     getDocs(query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre')))
@@ -84,14 +87,15 @@ async function openPartido() {
   form.categoria.addEventListener('change', updateEquipos);
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    await addPartido({
+    const data = {
       fecha: new Date(form.fecha.value),
       rama: form.rama.value,
       categoria: form.categoria.value,
       localId: form.local.value,
       visitaId: form.visita.value,
       arbitroId: form.arbitro.value
-    });
+    };
+    if (isEdit) await updatePartido(id, data); else await addPartido(data);
     closeModal();
   });
 }
