@@ -1,11 +1,11 @@
-import { db, collection, query, where, getDocs } from '../data/firebase.js';
+import { db, collection, query, where, getDocs, orderBy } from '../data/firebase.js';
 import { paths, TEMP_ID } from '../data/paths.js';
 import { getActiveTorneo } from '../data/torneos.js';
 
 export async function render(el) {
   const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
 
-  const [eqSnap, paSnap, coSnap, taSnap, joSnap] = await Promise.all([
+  const [eqSnap, paSnap, coSnap, taSnap, joSnap, delSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId', '==', getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
@@ -18,10 +18,11 @@ export async function render(el) {
       where('tempId', '==', TEMP_ID)
     )),
     getDocs(query(collection(db, paths.tarifas()), where('torneoId', '==', getActiveTorneo()))),
-    getDocs(query(collection(db, paths.jornadas()), where('torneoId', '==', getActiveTorneo())))
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId', '==', getActiveTorneo()))),
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
   ]);
 
-  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data()]));
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const cobros = {};
   coSnap.docs.forEach(d => {
@@ -31,6 +32,7 @@ export async function render(el) {
   });
   const tarifas = taSnap.docs.map(d => d.data());
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
   const ramas = new Set(eqSnap.docs.map(d => d.data().rama).filter(Boolean));
   const categorias = new Set(eqSnap.docs.map(d => d.data().categoria).filter(Boolean));
 
@@ -41,6 +43,7 @@ export async function render(el) {
   const jornadaOpts = Object.entries(jornadas).map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
   const ramaOpts = Array.from(ramas).map(r => `<option value="${r}">${r}</option>`).join('');
   const categoriaOpts = Array.from(categorias).map(c => `<option value="${c}">${c}</option>`).join('');
+  const delegacionOpts = Object.entries(delegaciones).map(([id,nombre]) => `<option value="${id}">${nombre}</option>`).join('');
 
   el.innerHTML = `
     <div class="card">
@@ -51,6 +54,7 @@ export async function render(el) {
         <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
         <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
         <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
+        <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
         <button id="aplicar" class="btn btn-secondary">Aplicar</button>
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
@@ -62,6 +66,7 @@ export async function render(el) {
     const jFilter = document.getElementById('f-jornada').value;
     const rFilter = document.getElementById('f-rama').value;
     const cFilter = document.getElementById('f-categoria').value;
+    const dFilter = document.getElementById('f-delegacion').value;
 
     const filtered = partidos.filter(pa => {
       if (jFilter && pa.jornadaId !== jFilter) return false;
@@ -71,8 +76,8 @@ export async function render(el) {
     });
 
     const rowsByStatus = { Pendiente: [], Parcial: [], Pagado: [] };
-    let partidosAg = filtered.length;
-    let partidosJug = 0;
+    const partidosAgSet = new Set();
+    const partidosJugSet = new Set();
     let tarifaAg = 0;
     let tarifaJug = 0;
     let totalCobrado = 0;
@@ -82,13 +87,18 @@ export async function render(el) {
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-      const local = equipos[pa.localId] || pa.localId || '';
-      const visita = equipos[pa.visitaId] || pa.visitaId || '';
+      const local = equipos[pa.localId]?.nombre || pa.localId || '';
+      const visita = equipos[pa.visitaId]?.nombre || pa.visitaId || '';
       const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
       const rama = pa.rama || '';
       const categoria = pa.categoria || '';
 
-      function processEquipo(eqId, eqNombre) {
+      function processEquipo(eqId) {
+        const eq = equipos[eqId] || {};
+        const eqNombre = eq.nombre || eqId || '';
+        const delegId = eq.delegacionId || '';
+        if (dFilter && delegId !== dFilter) return;
+        const delegacion = delegaciones[delegId] || '';
         const co = cobros[pa.id]?.[eqId] || {};
         const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
         const monto = Number(co.monto || 0);
@@ -103,6 +113,7 @@ export async function render(el) {
           <td data-label="Categoría">${categoria}</td>
           <td data-label="Equipos">${local} vs ${visita}</td>
           <td data-label="Equipo">${eqNombre}</td>
+          <td data-label="Delegación">${delegacion}</td>
           <td data-label="Fecha">${fecha}</td>
           <td data-label="Hora">${hora}</td>
           <td data-label="Tarifa">${fmt.format(tarifa)}</td>
@@ -115,16 +126,19 @@ export async function render(el) {
         totalCobrado += monto;
         saldoPend += saldo;
         if (pa.jugado) tarifaJug += tarifa;
+        partidosAgSet.add(pa.id);
+        if (pa.jugado) partidosJugSet.add(pa.id);
       }
 
-      processEquipo(pa.localId, local);
-      processEquipo(pa.visitaId, visita);
-      if (pa.jugado) partidosJug++;
+      processEquipo(pa.localId);
+      processEquipo(pa.visitaId);
     });
 
     const pendientes = rowsByStatus.Pendiente.length;
     const parciales = rowsByStatus.Parcial.length;
     const pagados = rowsByStatus.Pagado.length;
+    const partidosAg = partidosAgSet.size;
+    const partidosJug = partidosJugSet.size;
 
     const kpiHtml = `
       <div class="dashboard-card"><h3 class="h3">Partidos agendados</h3><p>${partidosAg}<br><span class="label">${fmt.format(tarifaAg)}</span></p></div>
@@ -146,7 +160,7 @@ export async function render(el) {
       const totMonto = group.reduce((s, r) => s + r.monto, 0);
       const totSaldo = group.reduce((s, r) => s + r.saldo, 0);
       const summary = `<div class="summary-line"><span>Cobros: ${group.length}</span><span>Tarifa: ${fmt.format(totTarifa)}</span><span>Monto: ${fmt.format(totMonto)}</span><span>Saldo: ${fmt.format(totSaldo)}</span></div>`;
-      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
+      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Equipo</th><th>Delegación</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
       return `<h3 class="h3 table-label">${labelMap[status]}</h3>${tableHeader}${rowsHtml}</tbody></table>${summary}`;
     }).filter(Boolean);
     const tableHtml = tableParts.length ? tableParts.join('') : '<p>No hay partidos</p>';
@@ -158,6 +172,7 @@ export async function render(el) {
     document.getElementById('f-jornada').value = '';
     document.getElementById('f-rama').value = '';
     document.getElementById('f-categoria').value = '';
+    document.getElementById('f-delegacion').value = '';
     update();
   });
   update();
