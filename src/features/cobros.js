@@ -48,7 +48,7 @@ export async function render(el) {
   const unsub = onSnapshot(q, snap => {
     const cobros = {};
     snap.docs.forEach(d => { cobros[d.data().partidoId] = { id: d.id, ...d.data() }; });
-    const grupos = {};
+    const rows = [];
     partidos.forEach(pa => {
       const co = cobros[pa.id] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
@@ -58,28 +58,25 @@ export async function render(el) {
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
       const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
       const monto = Number(co.monto || 0);
+      const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
       let status, badgeClass;
       if (!monto) { status = 'Pendiente'; badgeClass = 'badge-danger'; }
       else if (monto < tarifa) { status = 'Parcial'; badgeClass = 'badge-warning'; }
       else { status = 'Pagado'; badgeClass = 'badge-success'; }
-      const row = `<tr>
-        <td data-label="Rama y Categoría"><span class="desktop-only">${pa.rama || ''}</span><span class="mobile-only">${pa.rama || ''} ${pa.categoria || ''}</span></td>
-        <td data-label="Categoría" class="desktop-only">${pa.categoria || ''}</td>
+      rows.push(`<tr>
+        <td data-label="Jornada">${jornada}</td>
+        <td data-label="Rama y Categoría">${pa.rama || ''} ${pa.categoria || ''}</td>
         <td data-label="Equipos">${local} vs ${visita}</td>
-        <td data-label="Fecha y Hora"><span class="desktop-only">${fecha}</span><span class="mobile-only">${fecha} ${hora}</span></td>
-        <td data-label="Hora" class="desktop-only">${hora}</td>
+        <td data-label="Fecha y hora">${fecha} ${hora}</td>
         <td data-label="Tarifa">${fmt.format(tarifa)}</td>
         <td data-label="Monto">${fmt.format(monto)}</td>
         <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
         ${isAdmin?`<td data-label="Acciones">${renderCobroActions(co.id, pa.id)}</td>`:''}
-      </tr>`;
-      const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
-      if (!grupos[jornada]) grupos[jornada] = [];
-      grupos[jornada].push(row);
+      </tr>`);
     });
-    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Rama</th><th class="desktop-only">Categoría</th><th>Equipos</th><th>Fecha</th><th class="desktop-only">Hora</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
-    const html = Object.keys(grupos).sort().map(j => renderGrupo(j, grupos[j])).join('');
-    document.getElementById('lists').innerHTML = html || '<p>No hay partidos</p>';
+    const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama y Categoría</th><th>Equipos</th><th>Fecha y hora</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>`;
+    const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
+    document.getElementById('lists').innerHTML = html;
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
@@ -120,7 +117,7 @@ async function openCobro(id, partidoId) {
   const existing = coSnap?.exists() ? coSnap.data() : { partidoId: '', monto: '', tarifa: 0 };
   const paOpts = partidos.map(p => `<option value="${p.id}" data-rama="${p.rama}" data-categoria="${p.categoria}">${equipos[p.localId] || p.localId} vs ${equipos[p.visitaId] || p.visitaId}</option>`).join('');
   openModal(`<form id="co-form" class="modal-form">
-    <label class="field"><span class="label">Partido</span><select name="partido" class="input"><option value="">Partido</option>${paOpts}</select></label>
+    <label class="field"><span class="label">Partido</span><select name="partido" class="input" disabled><option value="">Partido</option>${paOpts}</select></label>
     <label class="field"><span class="label">Tarifa</span><input name="tarifa" class="input" disabled></label>
     <label class="field"><span class="label">Monto</span><input name="monto" type="number" min="0" step="1" class="input" placeholder="Cobro"></label>
     <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
@@ -138,7 +135,6 @@ async function openCobro(id, partidoId) {
     form.tarifa.value = fmt.format(tarifa);
     form.tarifa.dataset.raw = tarifa;
   }
-  form.partido.addEventListener('change', updateTarifa);
   form.partido.value = existing.partidoId || partidoId || '';
   updateTarifa();
   if (existing.tarifa) {
