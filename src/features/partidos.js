@@ -31,7 +31,9 @@ export async function render(el) {
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
       const local = equipos[data.localId] || data.localId;
       const visita = equipos[data.visitaId] || data.visitaId;
-      return `<tr><td>${fecha}</td><td>${local} vs ${visita}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      const marcador = data.jugado && data.marcadorLocal != null && data.marcadorVisita != null ?
+        ` (${data.marcadorLocal}-${data.marcadorVisita})` : '';
+      return `<tr><td>${fecha}</td><td>${local} vs ${visita}${marcador}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<tr><td>No hay partidos</td></tr>';
   });
@@ -58,6 +60,11 @@ async function openPartido(id) {
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const arOpts = arSnap.docs.map(d => `<option value="${d.id}">${d.data().nombre}</option>`).join('');
   const existing = paSnap?.exists() ? paSnap.data() : { fecha: null, rama: '', categoria: '', localId: '', visitaId: '', arbitroId: '' };
+  const canScore = isEdit && existing.fecha && new Date(existing.fecha.seconds * 1000) <= new Date();
+  const scoreFields = canScore ? `
+    <label class="field"><span class="label">Partido jugado</span><input name="jugado" type="checkbox"></label>
+    <label class="field" id="marcador-local-wrap" hidden><span class="label">Marcador Local</span><input name="marcadorLocal" type="number" class="input" min="0"></label>
+    <label class="field" id="marcador-visita-wrap" hidden><span class="label">Marcador Visitante</span><input name="marcadorVisita" type="number" class="input" min="0"></label>` : '';
   openModal(`<form id="pa-form" class="modal-form">
     <label class="field"><span class="label">Fecha</span><input name="fecha" type="datetime-local" class="input"></label>
     <label class="field"><span class="label">Rama</span><select name="rama" class="input"><option value="">Rama</option>${ramaOpts}</select></label>
@@ -65,6 +72,7 @@ async function openPartido(id) {
     <label class="field" id="local-wrap" hidden><span class="label">Local</span><select name="local" class="input"></select></label>
     <label class="field" id="visita-wrap" hidden><span class="label">Visita</span><select name="visita" class="input"></select></label>
     <label class="field" id="arbitro-wrap" hidden><span class="label">Árbitro</span><select name="arbitro" class="input"><option value="">Árbitro</option>${arOpts}</select></label>
+    ${scoreFields}
     <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
   </form>`);
   const form = document.getElementById('pa-form');
@@ -96,6 +104,17 @@ async function openPartido(id) {
     form.visita.value = existing.visitaId || '';
     form.arbitro.value = existing.arbitroId || '';
   }
+  if (canScore) {
+    const toggleScores = () => {
+      document.getElementById('marcador-local-wrap').hidden = !form.jugado.checked;
+      document.getElementById('marcador-visita-wrap').hidden = !form.jugado.checked;
+    };
+    form.jugado.checked = existing.jugado || false;
+    form.marcadorLocal.value = existing.marcadorLocal ?? '';
+    form.marcadorVisita.value = existing.marcadorVisita ?? '';
+    toggleScores();
+    form.jugado.addEventListener('change', toggleScores);
+  }
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = {
@@ -106,6 +125,11 @@ async function openPartido(id) {
       visitaId: form.visita.value,
       arbitroId: form.arbitro.value
     };
+    if (canScore) {
+      data.jugado = form.jugado.checked;
+      data.marcadorLocal = form.jugado.checked ? Number(form.marcadorLocal.value) : null;
+      data.marcadorVisita = form.jugado.checked ? Number(form.marcadorVisita.value) : null;
+    }
     if (isEdit) await updatePartido(id, data); else await addPartido(data);
     closeModal();
   });
