@@ -39,6 +39,14 @@
         {"fieldPath":"pagado","order":"ASCENDING"},
         {"fieldPath":"fechaCobro","order":"DESCENDING"}
       ]
+    },
+    {
+      "collectionGroup": "delegaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"ligaId","order":"ASCENDING"},
+        {"fieldPath":"nombre","order":"ASCENDING"}
+      ]
     }
   ],
   "fieldOverrides": []
