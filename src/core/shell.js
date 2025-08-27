@@ -6,6 +6,7 @@ const shellHtml = `
 <nav id="drawer" hidden>
   <a href="#/">Home</a>
   <a href="#/equipos">Equipos</a>
+  <a href="#/delegaciones">Delegaciones</a>
   <a href="#/arbitros">Árbitros</a>
   <a href="#/partidos">Partidos</a>
   <a href="#/cobros">Cobros</a>
