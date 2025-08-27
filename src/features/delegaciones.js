@@ -8,7 +8,7 @@ import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><h2>Delegaciones</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<table id="list"></table></div>`;
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Delegaciones</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table id="list"></table></div>`;
   const q = query(collection(db, paths.delegaciones()), where('ligaId','==',LIGA_ID), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => `<tr><td>${d.data().nombre}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`).join('');
@@ -23,7 +23,7 @@ export async function render(el) {
 
 function openDelegacion(id) {
   const isEdit = !!id;
-  openModal(`<form id="del-form" class="modal-form"><input name="nombre" placeholder="Nombre"><button>Guardar</button></form>`);
+  openModal(`<form id="del-form" class="modal-form"><label class="field"><span class="label">Nombre</span><input class="input" name="nombre" placeholder="Nombre"></label><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div></form>`);
   const form = document.getElementById('del-form');
   form.addEventListener('submit', async e => {
     e.preventDefault();

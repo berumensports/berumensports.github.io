@@ -15,7 +15,21 @@ function showShell() {
 
 function showLogin() {
   const app = document.getElementById('app');
-  app.innerHTML = `<div class="card"><h2>Login</h2><form id="login"><input name="email" type="email" placeholder="Email"><input name="pass" type="password" placeholder="Password"><button>Entrar</button></form></div>`;
+  app.innerHTML = `
+    <div class="card">
+      <h1 class="h1">Iniciar sesión</h1>
+      <form id="login" class="form">
+        <label class="field">
+          <span class="label">Correo</span>
+          <input class="input" name="email" type="email" required>
+        </label>
+        <label class="field">
+          <span class="label">Contraseña</span>
+          <input class="input" name="pass" type="password" required>
+        </label>
+        <button class="btn btn-primary" type="submit">Entrar</button>
+      </form>
+    </div>`;
   document.getElementById('login').addEventListener('submit', e => {
     e.preventDefault();
     login(e.target.email.value, e.target.pass.value).catch(err=>alert(err.message));
@@ -37,7 +51,7 @@ onAuth(async user => {
     if (info) {
       const userInfoEl = document.getElementById('user-info');
       const logoutBtn = document.getElementById('logout-btn');
-      if (userInfoEl) userInfoEl.textContent = `${info.nombre} - ${info.role}`;
+      if (userInfoEl) userInfoEl.innerHTML = `${info.nombre} <span id="user-role" class="chip">${info.role}</span>`;
       if (logoutBtn) logoutBtn.hidden = false;
       initRouter();
     }
