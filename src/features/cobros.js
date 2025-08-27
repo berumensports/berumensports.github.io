@@ -18,7 +18,7 @@ export async function render(el) {
         <input id="buscar" class="input" placeholder="Buscar">
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
-      <table id="list"></table>
+      <div id="lists"></div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo cobro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
@@ -41,23 +41,37 @@ export async function render(el) {
     orderBy('fechaCobro','desc')
   );
   const unsub = onSnapshot(q, snap => {
-    const rows = snap.docs.map(d => {
+    const grupos = { pendientes: [], parciales: [], pagados: [] };
+    snap.docs.forEach(d => {
       const data = d.data();
       const pa = partidos[data.partidoId] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
       const local = equipos[pa.localId] || pa.localId || '';
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
-      return `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(data.tarifa||0)}</td><td>${fmt.format(data.monto||0)}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
-    }).join('');
-    document.getElementById('list').innerHTML = rows || '<tr><td>No hay cobros</td></tr>';
+      const tarifa = Number(data.tarifa || 0);
+      const monto = Number(data.monto || 0);
+      let status, badgeClass;
+      if (!monto) { status = 'Pendiente'; badgeClass = 'badge-danger'; }
+      else if (monto < tarifa) { status = 'Pago parcial'; badgeClass = 'badge-warning'; }
+      else { status = 'Pagado'; badgeClass = 'badge-success'; }
+      const row = `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(tarifa)}</td><td>${fmt.format(monto)}</td><td><span class="badge ${badgeClass}">${status}</span></td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
+      if (!monto) grupos.pendientes.push(row);
+      else if (monto < tarifa) grupos.parciales.push(row);
+      else grupos.pagados.push(row);
+    });
+    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table>${rows.join('')}</table>` : '';
+    const html = renderGrupo('Pendientes', grupos.pendientes) +
+                 renderGrupo('Pagados Parcialmente', grupos.parciales) +
+                 renderGrupo('Pagados', grupos.pagados);
+    document.getElementById('lists').innerHTML = html || '<p>No hay cobros</p>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
     const open = (id) => openCobro(id);
     document.getElementById('nuevo')?.addEventListener('click', () => open());
     document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
-    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deleteCobro(id) }, true);
+    attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete: id=>deleteCobro(id) }, true);
   }
 }
 
