@@ -1,9 +1,10 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
 import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
-import { addCobro } from '../data/repo.js';
+import { addCobro, updateCobro, deleteCobro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
+import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -47,19 +48,21 @@ export async function render(el) {
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
       const local = equipos[pa.localId] || pa.localId || '';
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
-      return `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(data.tarifa||0)}</td><td>${fmt.format(data.monto||0)}</td></tr>`;
+      return `<tr><td>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td><td>${fmt.format(data.tarifa||0)}</td><td>${fmt.format(data.monto||0)}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<tr><td>No hay cobros</td></tr>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
-    const open = () => openCobro();
-    document.getElementById('nuevo')?.addEventListener('click', open);
-    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+    const open = (id) => openCobro(id);
+    document.getElementById('nuevo')?.addEventListener('click', () => open());
+    document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
+    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deleteCobro(id) }, true);
   }
 }
 
-async function openCobro() {
+async function openCobro(id) {
+  const isEdit = !!id;
   const [paSnap, taSnap] = await Promise.all([
     getDocs(query(
       collection(db, paths.partidos()),
@@ -94,13 +97,14 @@ async function openCobro() {
   form.partido.addEventListener('change', updateTarifa);
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    await addCobro({
+    const data = {
       partidoId: form.partido.value,
       tarifa: Number(form.tarifa.dataset.raw || 0),
       monto: Number(form.monto.value),
       pagado:false,
       fechaCobro: new Date(),
-    });
+    };
+    if (isEdit) await updateCobro(id, data); else await addCobro(data);
     closeModal();
   });
 }

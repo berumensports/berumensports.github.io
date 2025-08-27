@@ -1,9 +1,10 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
 import { paths, LIGA_ID } from '../data/paths.js';
-import { addTarifa } from '../data/repo.js';
+import { addTarifa, updateTarifa, deleteTarifa } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
+import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -25,19 +26,21 @@ export async function render(el) {
     const rows = snap.docs.map(d => {
       const data = d.data();
       const monto = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(data.tarifa);
-      return `<tr><td>${data.rama}</td><td>${data.categoria}</td><td>${monto}</td></tr>`;
+      return `<tr><td>${data.rama}</td><td>${data.categoria}</td><td>${monto}</td>${isAdmin?'<td>'+renderActions(d.id)+'</td>':''}</tr>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<tr><td>No hay tarifas</td></tr>';
   });
   pushCleanup(() => unsub());
   if (isAdmin) {
-    const open = () => openTarifa();
-    document.getElementById('nuevo')?.addEventListener('click', open);
-    document.getElementById('fab-nuevo')?.addEventListener('click', open);
+    const open = (id) => openTarifa(id);
+    document.getElementById('nuevo')?.addEventListener('click', () => open());
+    document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
+    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deleteTarifa(id) }, true);
   }
 }
 
-async function openTarifa() {
+async function openTarifa(id) {
+  const isEdit = !!id;
   const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)));
   const equipos = eqSnap.docs.map(d => d.data());
   const ramas = [...new Set(equipos.map(e => e.rama).filter(Boolean))];
@@ -52,11 +55,12 @@ async function openTarifa() {
   </form>`);
   document.getElementById('ta-form').addEventListener('submit', async e => {
     e.preventDefault();
-    await addTarifa({
+    const data = {
       rama: e.target.rama.value,
       categoria: e.target.categoria.value,
       tarifa: Number(e.target.tarifa.value),
-    });
+    };
+    if (isEdit) await updateTarifa(id, data); else await addTarifa(data);
     closeModal();
   });
 }
