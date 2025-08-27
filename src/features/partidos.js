@@ -96,7 +96,13 @@ async function openPartido(id) {
   form.rama.addEventListener('change', updateEquipos);
   form.categoria.addEventListener('change', updateEquipos);
   if (isEdit) {
-    form.fecha.value = existing.fecha ? new Date(existing.fecha.seconds * 1000).toISOString().slice(0,16) : '';
+    if (existing.fecha) {
+      const date = new Date(existing.fecha.seconds * 1000);
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      form.fecha.value = date.toISOString().slice(0, 16);
+    } else {
+      form.fecha.value = '';
+    }
     form.rama.value = existing.rama || '';
     form.categoria.value = existing.categoria || '';
     updateEquipos();
