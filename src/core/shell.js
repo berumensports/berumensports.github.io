@@ -11,6 +11,7 @@ const shellHtml = `
   <a href="#/cobros">Cobros</a>
   <a href="#/reportes">Reportes</a>
 </nav>
+<div id="drawer-overlay" hidden></div>
 <nav class="tabbar">
   <a href="#/">🏠</a>
   <a href="#/equipos">👥</a>
@@ -25,15 +26,24 @@ export function renderShell() {
   document.body.insertAdjacentHTML('afterbegin', shellHtml);
   const menuBtn = document.getElementById('menu-btn');
   const drawer = document.getElementById('drawer');
-  menuBtn.addEventListener('click', () => drawer.hidden = !drawer.hidden);
+  const overlay = document.getElementById('drawer-overlay');
+  function closeDrawer() {
+    drawer.hidden = true;
+    overlay.hidden = true;
+  }
+  menuBtn.addEventListener('click', () => {
+    drawer.hidden = !drawer.hidden;
+    overlay.hidden = drawer.hidden;
+  });
+  overlay.addEventListener('click', closeDrawer);
   drawer.addEventListener('click', e => {
-    if (e.target.tagName === 'A') drawer.hidden = true;
+    if (e.target.closest('a')) closeDrawer();
   });
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href^="#/"]');
     if (a && a.getAttribute('href') === location.hash) e.preventDefault();
     if (!drawer.hidden && !drawer.contains(e.target) && e.target !== menuBtn) {
-      drawer.hidden = true;
+      closeDrawer();
     }
   });
   rendered = true;
