@@ -4,7 +4,7 @@ import { LIGA_ID, TEMP_ID, paths } from './paths.js';
 async function safeWrite(cb, label) {
   try {
     const res = await cb();
-    console.log(`OK ${label}:`, res.id || res);
+    console.log(`OK ${label}:`, res?.id ?? res);
     return res;
   } catch (e) {
     console.error(`FALLÓ ${label}:`, e.message);
