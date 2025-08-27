@@ -191,9 +191,16 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
     justify-content: space-between;
     padding: var(--space-1) 0;
   }
-  .responsive-table td::before {
+.responsive-table td::before {
     content: attr(data-label);
     font-weight: 600;
     margin-right: var(--space-3);
   }
+}
+
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
 }
