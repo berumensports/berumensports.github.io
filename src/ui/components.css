@@ -142,7 +142,7 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 
 @media (min-width:1024px) {
   .modal-sheet {
-    max-width:30vw;
+    max-width:60vw;
     left:50%;
     right:auto;
     transform:translateX(-50%);
