@@ -1,6 +1,6 @@
 import './data/firebase.js';
 import { renderShell } from './core/shell.js';
-import { onAuth, login, logout, fetchUserRole } from './core/auth.js';
+import { onAuth, login, logout, fetchUserInfo } from './core/auth.js';
 import { initRouter } from './core/router.js';
 
 function hideShell() {
@@ -26,11 +26,19 @@ onAuth(async user => {
   if (!user) {
     hideShell();
     showLogin();
+    const userInfoEl = document.getElementById('user-info');
+    const logoutBtn = document.getElementById('logout-btn');
+    if (userInfoEl) userInfoEl.textContent = 'Berumen';
+    if (logoutBtn) logoutBtn.hidden = true;
   } else {
     renderShell();
     showShell();
-    const role = await fetchUserRole(user.uid);
-    if (role) {
+    const info = await fetchUserInfo(user.uid);
+    if (info) {
+      const userInfoEl = document.getElementById('user-info');
+      const logoutBtn = document.getElementById('logout-btn');
+      if (userInfoEl) userInfoEl.textContent = `${info.nombre} - ${info.role}`;
+      if (logoutBtn) logoutBtn.hidden = false;
       initRouter();
     }
   }

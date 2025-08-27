@@ -1,7 +1,8 @@
 const shellHtml = `
 <header class="topbar">
   <button id="menu-btn" aria-label="Menu">☰</button>
-  <h1 style="margin-left:1rem; font-size:1.2rem;">Berumen</h1>
+  <div id="user-info" class="topbar-title">Berumen</div>
+  <button id="logout-btn" onclick="appLogout()" aria-label="Cerrar sesión" hidden>⎋</button>
 </header>
 <nav id="drawer" hidden>
   <a href="#/">Home</a>
