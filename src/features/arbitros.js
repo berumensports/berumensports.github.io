@@ -1,4 +1,4 @@
-import { db, collection, query, where, onSnapshot, orderBy } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy, doc, getDoc } from '../data/firebase.js';
 import { paths, LIGA_ID } from '../data/paths.js';
 import { addArbitro, updateArbitro, deleteArbitro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
@@ -45,8 +45,13 @@ function formatPhone(value) {
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)} ${digits.slice(6)}`;
 }
 
-function openArbitro(id) {
+async function openArbitro(id) {
   const isEdit = !!id;
+  let existing = { nombre: '', telefono: '', email: '' };
+  if (isEdit) {
+    const snap = await getDoc(doc(db, paths.arbitros(), id));
+    if (snap.exists()) existing = snap.data();
+  }
   openModal(`
     <form id="ar-form" class="modal-form">
       <label class="field"><span class="label">Nombre</span><input name="nombre" class="input" required></label>
@@ -55,6 +60,9 @@ function openArbitro(id) {
       <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
     </form>`);
   const form = document.getElementById('ar-form');
+  form.nombre.value = existing.nombre || '';
+  form.telefono.value = existing.telefono || '';
+  form.email.value = existing.email || '';
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = {

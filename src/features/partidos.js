@@ -1,4 +1,4 @@
-import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
 import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
 import { addPartido, updatePartido, deletePartido } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
@@ -46,9 +46,10 @@ export async function render(el) {
 
 async function openPartido(id) {
   const isEdit = !!id;
-  const [eqSnap, arSnap] = await Promise.all([
+  const [eqSnap, arSnap, paSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID), orderBy('nombre'))),
-    getDocs(query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre')))
+    getDocs(query(collection(db, paths.arbitros()), where('ligaId','==',LIGA_ID), orderBy('nombre'))),
+    isEdit ? getDoc(doc(db, paths.partidos(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const ramas = [...new Set(equipos.map(e => e.rama).filter(Boolean))];
@@ -56,6 +57,7 @@ async function openPartido(id) {
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const arOpts = arSnap.docs.map(d => `<option value="${d.id}">${d.data().nombre}</option>`).join('');
+  const existing = paSnap?.exists() ? paSnap.data() : { fecha: null, rama: '', categoria: '', localId: '', visitaId: '', arbitroId: '' };
   openModal(`<form id="pa-form" class="modal-form">
     <label class="field"><span class="label">Fecha</span><input name="fecha" type="datetime-local" class="input"></label>
     <label class="field"><span class="label">Rama</span><select name="rama" class="input"><option value="">Rama</option>${ramaOpts}</select></label>
@@ -85,6 +87,15 @@ async function openPartido(id) {
   }
   form.rama.addEventListener('change', updateEquipos);
   form.categoria.addEventListener('change', updateEquipos);
+  if (isEdit) {
+    form.fecha.value = existing.fecha ? new Date(existing.fecha.seconds * 1000).toISOString().slice(0,16) : '';
+    form.rama.value = existing.rama || '';
+    form.categoria.value = existing.categoria || '';
+    updateEquipos();
+    form.local.value = existing.localId || '';
+    form.visita.value = existing.visitaId || '';
+    form.arbitro.value = existing.arbitroId || '';
+  }
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = {

@@ -1,4 +1,4 @@
-import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
 import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
 import { addCobro, updateCobro, deleteCobro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
@@ -63,17 +63,19 @@ export async function render(el) {
 
 async function openCobro(id) {
   const isEdit = !!id;
-  const [paSnap, taSnap] = await Promise.all([
+  const [paSnap, taSnap, coSnap] = await Promise.all([
     getDocs(query(
       collection(db, paths.partidos()),
       where('ligaId','==',LIGA_ID),
       where('tempId','==',TEMP_ID),
       orderBy('fecha','desc')
     )),
-    getDocs(query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID)))
+    getDocs(query(collection(db, paths.tarifas()), where('ligaId','==',LIGA_ID))),
+    isEdit ? getDoc(doc(db, paths.cobros(), id)) : Promise.resolve(null)
   ]);
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());
+  const existing = coSnap?.exists() ? coSnap.data() : { partidoId: '', monto: '', tarifa: 0 };
   const paOpts = partidos.map(p => `<option value="${p.id}" data-rama="${p.rama}" data-categoria="${p.categoria}">${p.localId} vs ${p.visitaId}</option>`).join('');
   openModal(`<form id="co-form" class="modal-form">
     <label class="field"><span class="label">Partido</span><select name="partido" class="input"><option value="">Partido</option>${paOpts}</select></label>
@@ -95,6 +97,11 @@ async function openCobro(id) {
     form.tarifa.dataset.raw = tarifa;
   }
   form.partido.addEventListener('change', updateTarifa);
+  form.partido.value = existing.partidoId || '';
+  updateTarifa();
+  form.tarifa.value = fmt.format(existing.tarifa || 0);
+  form.tarifa.dataset.raw = existing.tarifa || 0;
+  form.monto.value = existing.monto || '';
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = {

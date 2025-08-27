@@ -1,4 +1,4 @@
-import { db, collection, query, where, onSnapshot, orderBy } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy, doc, getDoc } from '../data/firebase.js';
 import { paths, LIGA_ID } from '../data/paths.js';
 import { addDelegacion, updateDelegacion, deleteDelegacion } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
@@ -21,10 +21,16 @@ export async function render(el) {
   }
 }
 
-function openDelegacion(id) {
+async function openDelegacion(id) {
   const isEdit = !!id;
+  let existing = { nombre: '' };
+  if (isEdit) {
+    const snap = await getDoc(doc(db, paths.delegaciones(), id));
+    if (snap.exists()) existing = snap.data();
+  }
   openModal(`<form id="del-form" class="modal-form"><label class="field"><span class="label">Nombre</span><input class="input" name="nombre" placeholder="Nombre"></label><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div></form>`);
   const form = document.getElementById('del-form');
+  form.nombre.value = existing.nombre || '';
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = { nombre: form.nombre.value };
