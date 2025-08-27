@@ -3,8 +3,39 @@ import { paths, TEMP_ID } from '../data/paths.js';
 import { getActiveTorneo } from '../data/torneos.js';
 
 export async function render(el) {
-  const chartJs = await import('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js');
-  const { default: Chart } = chartJs;
+  const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+
+  const [eqSnap, paSnap, coSnap, taSnap, joSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.equipos()), where('torneoId', '==', getActiveTorneo()))),
+    getDocs(query(
+      collection(db, paths.partidos()),
+      where('torneoId', '==', getActiveTorneo()),
+      where('tempId', '==', TEMP_ID)
+    )),
+    getDocs(query(
+      collection(db, paths.cobros()),
+      where('torneoId', '==', getActiveTorneo()),
+      where('tempId', '==', TEMP_ID)
+    )),
+    getDocs(query(collection(db, paths.tarifas()), where('torneoId', '==', getActiveTorneo()))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId', '==', getActiveTorneo())))
+  ]);
+
+  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+  const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const cobros = Object.fromEntries(coSnap.docs.map(d => [d.data().partidoId, { id: d.id, ...d.data() }]));
+  const tarifas = taSnap.docs.map(d => d.data());
+  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const ramas = new Set(eqSnap.docs.map(d => d.data().rama).filter(Boolean));
+  const categorias = new Set(eqSnap.docs.map(d => d.data().categoria).filter(Boolean));
+
+  function tarifaPorPartido(pa) {
+    return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
+  }
+
+  const jornadaOpts = Object.entries(jornadas).map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join('');
+  const ramaOpts = Array.from(ramas).map(r => `<option value="${r}">${r}</option>`).join('');
+  const categoriaOpts = Array.from(categorias).map(c => `<option value="${c}">${c}</option>`).join('');
 
   el.innerHTML = `
     <div class="card">
@@ -12,152 +43,105 @@ export async function render(el) {
         <h1 class="h1">Reportes</h1>
       </div>
       <div class="toolbar">
-        <select id="periodo" class="input">
-          <option value="year">Año</option>
-          <option value="month" selected>Mes</option>
-          <option value="week">Semana</option>
-          <option value="day">Día</option>
-          <option value="date">Fecha</option>
-        </select>
-        <input id="fecha" type="date" class="input" value="${new Date().toISOString().slice(0,10)}">
+        <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+        <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
+        <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
         <button id="aplicar" class="btn btn-secondary">Aplicar</button>
       </div>
       <div id="kpis" class="dashboard-kpis"></div>
-      <canvas id="chart-equipos" height="120"></canvas>
-      <canvas id="chart-cobros" height="120" class="mt-4"></canvas>
+      <div id="tabla"></div>
     </div>`;
 
-  const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
-  let chartEquipos;
-  let chartCobros;
+  function update() {
+    const jFilter = document.getElementById('f-jornada').value;
+    const rFilter = document.getElementById('f-rama').value;
+    const cFilter = document.getElementById('f-categoria').value;
 
-  function getRange(period, dateStr) {
-    const d = dateStr ? new Date(dateStr) : new Date();
-    d.setHours(0, 0, 0, 0);
-    let start;
-    let end;
-    switch (period) {
-      case 'year':
-        start = new Date(d.getFullYear(), 0, 1);
-        end = new Date(d.getFullYear() + 1, 0, 1);
-        break;
-      case 'month':
-        start = new Date(d.getFullYear(), d.getMonth(), 1);
-        end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-        break;
-      case 'week': {
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        start = new Date(d.setDate(diff));
-        start.setHours(0, 0, 0, 0);
-        end = new Date(start);
-        end.setDate(start.getDate() + 7);
-        break;
-      }
-      case 'day':
-      case 'date':
-        start = new Date(d);
-        start.setHours(0, 0, 0, 0);
-        end = new Date(start);
-        end.setDate(start.getDate() + 1);
-        break;
-      default:
-        start = new Date(d.getFullYear(), 0, 1);
-        end = new Date(d.getFullYear() + 1, 0, 1);
-    }
-    return { start, end };
-  }
+    const filtered = partidos.filter(pa => {
+      if (jFilter && pa.jornadaId !== jFilter) return false;
+      if (rFilter && pa.rama !== rFilter) return false;
+      if (cFilter && pa.categoria !== cFilter) return false;
+      return true;
+    });
 
-  async function update() {
-    const period = document.getElementById('periodo').value;
-    const dateStr = document.getElementById('fecha').value;
-    const { start, end } = getRange(period, dateStr);
+    const rowsByStatus = { Pendiente: [], Parcial: [], Pagado: [] };
+    let partidosAg = filtered.length;
+    let partidosJug = 0;
+    let tarifaAg = 0;
+    let tarifaJug = 0;
+    let totalCobrado = 0;
+    let saldoPend = 0;
 
-    const [delegSnap, equipoSnap, partidoSnap, cobroSnap] = await Promise.all([
-      getDocs(query(collection(db, paths.delegaciones()), where('torneoId', '==', getActiveTorneo()))),
-      getDocs(query(collection(db, paths.equipos()), where('torneoId', '==', getActiveTorneo()))),
-      getDocs(query(
-        collection(db, paths.partidos()),
-        where('torneoId', '==', getActiveTorneo()),
-        where('tempId', '==', TEMP_ID),
-        where('fecha', '>=', start),
-        where('fecha', '<', end)
-      )),
-      getDocs(query(
-        collection(db, paths.cobros()),
-        where('torneoId', '==', getActiveTorneo()),
-        where('tempId', '==', TEMP_ID),
-        where('fechaCobro', '>=', start),
-        where('fechaCobro', '<', end)
-      ))
-    ]);
-
-    const delegaciones = delegSnap.size;
-    const equipos = equipoSnap.size;
-    const ramas = new Set(equipoSnap.docs.map(d => d.data().rama).filter(Boolean));
-    const categorias = new Set(equipoSnap.docs.map(d => d.data().categoria).filter(Boolean));
-    const partidosAgendados = partidoSnap.size;
-
-    let pendientes = 0;
-    let parciales = 0;
-    let pagados = 0;
-    let cobradoParcial = 0;
-    let saldoParcial = 0;
-    let montoPagado = 0;
-    cobroSnap.docs.forEach(d => {
-      const data = d.data();
-      const tarifa = Number(data.tarifa || 0);
-      const monto = Number(data.monto || 0);
-      if (!monto) {
-        pendientes++;
-      } else if (monto < tarifa) {
-        parciales++;
-        cobradoParcial += monto;
-        saldoParcial += tarifa - monto;
-      } else {
-        pagados++;
-        montoPagado += monto;
+    filtered.forEach(pa => {
+      const co = cobros[pa.id] || {};
+      const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
+      const monto = Number(co.monto || 0);
+      const saldo = Math.max(tarifa - monto, 0);
+      const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
+      const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
+      const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+      const local = equipos[pa.localId] || pa.localId || '';
+      const visita = equipos[pa.visitaId] || pa.visitaId || '';
+      const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
+      const rama = pa.rama || '';
+      const categoria = pa.categoria || '';
+      let status;
+      if (!monto) status = 'Pendiente';
+      else if (monto < tarifa) status = 'Parcial';
+      else status = 'Pagado';
+      const rowHtml = `<tr>
+        <td data-label="Jornada">${jornada}</td>
+        <td data-label="Rama">${rama}</td>
+        <td data-label="Categoría">${categoria}</td>
+        <td data-label="Equipos">${local} vs ${visita}</td>
+        <td data-label="Fecha">${fecha}</td>
+        <td data-label="Hora">${hora}</td>
+        <td data-label="Tarifa">${fmt.format(tarifa)}</td>
+        <td data-label="Monto">${fmt.format(monto)}</td>
+        <td data-label="Saldo">${fmt.format(saldo)}</td>
+        <td data-label="Estado">${status}</td>
+      </tr>`;
+      rowsByStatus[status].push({ html: rowHtml, tarifa, monto, saldo });
+      tarifaAg += tarifa;
+      totalCobrado += monto;
+      saldoPend += saldo;
+      if (pa.jugado) {
+        partidosJug++;
+        tarifaJug += tarifa;
       }
     });
 
+    const pendientes = rowsByStatus.Pendiente.length;
+    const parciales = rowsByStatus.Parcial.length;
+    const pagados = rowsByStatus.Pagado.length;
+
     const kpiHtml = `
-      <div class="dashboard-card"><h3 class="h3">Delegaciones</h3><p>${delegaciones}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Equipos</h3><p>${equipos}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Ramas</h3><p>${ramas.size}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Categorías</h3><p>${categorias.size}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Partidos Agendados</h3><p>${partidosAgendados}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Pagos Pendientes</h3><p>${pendientes}</p></div>
-      <div class="dashboard-card"><h3 class="h3">Pagos Parciales</h3><p>${parciales}<br><span class="label">${fmt.format(cobradoParcial)} cobrados<br>${fmt.format(saldoParcial)} saldo</span></p></div>
-      <div class="dashboard-card"><h3 class="h3">Pagos Completos</h3><p>${pagados}<br><span class="label">${fmt.format(montoPagado)}</span></p></div>
+      <div class="dashboard-card"><h3 class="h3">Partidos agendados</h3><p>${partidosAg}<br><span class="label">${fmt.format(tarifaAg)}</span></p></div>
+      <div class="dashboard-card"><h3 class="h3">Partidos jugados</h3><p>${partidosJug}<br><span class="label">${fmt.format(tarifaJug)}</span></p></div>
+      <div class="dashboard-card"><h3 class="h3">Pendientes</h3><p>${pendientes}</p></div>
+      <div class="dashboard-card"><h3 class="h3">Parciales</h3><p>${parciales}</p></div>
+      <div class="dashboard-card"><h3 class="h3">Pagados</h3><p>${pagados}</p></div>
+      <div class="dashboard-card"><h3 class="h3">Monto total cobrado</h3><p>${fmt.format(totalCobrado)}</p></div>
+      <div class="dashboard-card"><h3 class="h3">Saldo pendiente</h3><p>${fmt.format(saldoPend)}</p></div>
     `;
     document.getElementById('kpis').innerHTML = kpiHtml;
 
-    const ramaCounts = {};
-    equipoSnap.docs.forEach(d => {
-      const r = d.data().rama || 'Sin rama';
-      ramaCounts[r] = (ramaCounts[r] || 0) + 1;
+    const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
+    const parts = [];
+    ['Pendiente', 'Parcial', 'Pagado'].forEach(status => {
+      const group = rowsByStatus[status];
+      if (!group.length) return;
+      group.forEach(r => parts.push(r.html));
+      const totTarifa = group.reduce((s, r) => s + r.tarifa, 0);
+      const totMonto = group.reduce((s, r) => s + r.monto, 0);
+      const totSaldo = group.reduce((s, r) => s + r.saldo, 0);
+      parts.push(`<tr class="summary-row"><td colspan="4">Total ${status}: ${group.length}</td><td>${fmt.format(totTarifa)}</td><td>${fmt.format(totMonto)}</td><td>${fmt.format(totSaldo)}</td><td colspan="3"></td></tr>`);
     });
-    const ramaLabels = Object.keys(ramaCounts);
-    const ramaData = Object.values(ramaCounts);
-
-    if (chartEquipos) chartEquipos.destroy();
-    chartEquipos = new Chart(document.getElementById('chart-equipos'), {
-      type: 'pie',
-      data: { labels: ramaLabels, datasets: [{ data: ramaData }] },
-      options: { plugins: { legend: { position: 'bottom' } } }
-    });
-
-    if (chartCobros) chartCobros.destroy();
-    chartCobros = new Chart(document.getElementById('chart-cobros'), {
-      type: 'bar',
-      data: {
-        labels: ['Pendientes', 'Parciales', 'Pagados'],
-        datasets: [{ data: [pendientes, parciales, pagados], backgroundColor: ['#f87171', '#fbbf24', '#34d399'] }]
-      },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
+    const tableHtml = parts.length ? `${header}${parts.join('')}</tbody></table>` : '<p>No hay partidos</p>';
+    document.getElementById('tabla').innerHTML = tableHtml;
   }
 
   document.getElementById('aplicar').addEventListener('click', update);
-  await update();
+  update();
 }
+
