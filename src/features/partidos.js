@@ -8,9 +8,20 @@ import { getUserRole } from '../core/auth.js';
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
   el.innerHTML = `<div class="card"><h2>Partidos</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<ul id="list"></ul></div>`;
+
+  const eqSnap = await getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID)));
+  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+
   const q = query(collection(db, paths.partidos()), where('ligaId','==',LIGA_ID), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
   const unsub = onSnapshot(q, snap => {
-    const rows = snap.docs.map(d => `<li>${new Date(d.data().fecha.seconds*1000).toLocaleString()} - ${d.data().localId} vs ${d.data().visitaId}</li>`).join('');
+    const rows = snap.docs.map(d => {
+      const data = d.data();
+      const fechaObj = new Date(data.fecha.seconds * 1000);
+      const fecha = `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}`;
+      const local = equipos[data.localId] || data.localId;
+      const visita = equipos[data.visitaId] || data.visitaId;
+      return `<li>${fecha} - ${local} vs ${visita}</li>`;
+    }).join('');
     document.getElementById('list').innerHTML = rows || '<li>No hay partidos</li>';
   });
   pushCleanup(() => unsub());
