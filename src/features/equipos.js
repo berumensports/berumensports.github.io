@@ -1,4 +1,4 @@
-import { db, collection, query, where, onSnapshot, orderBy, getDocs } from '../data/firebase.js';
+import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
 import { paths, LIGA_ID } from '../data/paths.js';
 import { addEquipo, updateEquipo, deleteEquipo } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
@@ -27,8 +27,13 @@ export async function render(el) {
   }
 }
 
-function openEquipo(id, delegaciones) {
+async function openEquipo(id, delegaciones) {
   const isEdit = !!id;
+  let existing = { nombre: '', rama: '', categoria: '', delegacionId: '' };
+  if (isEdit) {
+    const snap = await getDoc(doc(db, paths.equipos(), id));
+    if (snap.exists()) existing = snap.data();
+  }
   const ramaOpts = ['Varonil','Femenil'].map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = Array.from({length: 2020-2009+1}, (_,i)=>2009+i).map(y => `<option value="${y}">${y}</option>`).join('');
   const delOpts = Object.entries(delegaciones).map(([did,name]) => `<option value="${did}">${name}</option>`).join('');
@@ -40,6 +45,10 @@ function openEquipo(id, delegaciones) {
     <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
   </form>`);
   const form = document.getElementById('eq-form');
+  form.nombre.value = existing.nombre || '';
+  form.rama.value = existing.rama || '';
+  form.categoria.value = existing.categoria || '';
+  form.delegacionId.value = existing.delegacionId || '';
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = { nombre: form.nombre.value, rama: form.rama.value, categoria: form.categoria.value, delegacionId: form.delegacionId.value };
