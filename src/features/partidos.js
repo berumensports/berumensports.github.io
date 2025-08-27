@@ -17,7 +17,7 @@ export async function render(el) {
   if (isAdmin) document.getElementById('nuevo').addEventListener('click', () => openPartido());
 }
 function openPartido() {
-  openModal(`<form id="pa-form"><input name="fecha" type="date"><input name="local" placeholder="Local"><input name="visita" placeholder="Visita"><button>Guardar</button></form>`);
+  openModal(`<form id="pa-form" class="modal-form"><input name="fecha" type="date"><input name="local" placeholder="Local"><input name="visita" placeholder="Visita"><button>Guardar</button></form>`);
   document.getElementById('pa-form').addEventListener('submit', async e => {
     e.preventDefault();
     await addPartido({ fecha: new Date(e.target.fecha.value), localId: e.target.local.value, visitaId: e.target.visita.value });
