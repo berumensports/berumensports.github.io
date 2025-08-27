@@ -9,6 +9,18 @@ export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
   el.innerHTML = `<div class="card"><h2>Cobros</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<ul id="list"></ul></div>`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+
+  const [eqSnap, paSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.equipos()), where('ligaId','==',LIGA_ID))),
+    getDocs(query(
+      collection(db, paths.partidos()),
+      where('ligaId','==',LIGA_ID),
+      where('tempId','==',TEMP_ID)
+    ))
+  ]);
+  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+  const partidos = Object.fromEntries(paSnap.docs.map(d => [d.id, d.data()]));
+
   const q = query(
     collection(db, paths.cobros()),
     where('ligaId','==',LIGA_ID),
@@ -18,7 +30,14 @@ export async function render(el) {
   const unsub = onSnapshot(q, snap => {
     const rows = snap.docs.map(d => {
       const data = d.data();
-      return `<li>${data.partidoId || ''} - ${fmt.format(data.monto)}</li>`;
+      const pa = partidos[data.partidoId] || {};
+      const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
+      const fecha = fechaObj
+        ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}`
+        : '';
+      const local = equipos[pa.localId] || pa.localId || '';
+      const visita = equipos[pa.visitaId] || pa.visitaId || '';
+      return `<li>${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha} - Tarifa ${fmt.format(data.tarifa || 0)} - Monto ${fmt.format(data.monto || 0)}</li>`;
     }).join('');
     document.getElementById('list').innerHTML = rows || '<li>No hay cobros</li>';
   });
