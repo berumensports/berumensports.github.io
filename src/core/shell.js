@@ -46,5 +46,6 @@ export function renderShell() {
       closeDrawer();
     }
   });
+  window.addEventListener('hashchange', closeDrawer);
   rendered = true;
 }

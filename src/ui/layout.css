@@ -3,6 +3,9 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
 }
+[hidden] {
+  display: none !important;
+}
 #app {
   padding-top: 56px;
   padding-bottom: 56px;
