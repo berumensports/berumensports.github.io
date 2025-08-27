@@ -47,6 +47,7 @@ export async function render(el) {
         <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
         <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
         <button id="aplicar" class="btn btn-secondary">Aplicar</button>
+        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <div id="kpis" class="dashboard-kpis"></div>
       <div id="tabla"></div>
@@ -126,22 +127,29 @@ export async function render(el) {
     `;
     document.getElementById('kpis').innerHTML = kpiHtml;
 
-    const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
-    const parts = [];
-    ['Pendiente', 'Parcial', 'Pagado'].forEach(status => {
+    const labelMap = { Pendiente: 'Pendientes', Parcial: 'Parciales', Pagado: 'Pagados' };
+    const tableParts = ['Pendiente', 'Parcial', 'Pagado'].map(status => {
       const group = rowsByStatus[status];
-      if (!group.length) return;
-      group.forEach(r => parts.push(r.html));
+      if (!group.length) return '';
+      const rowsHtml = group.map(r => r.html).join('');
       const totTarifa = group.reduce((s, r) => s + r.tarifa, 0);
       const totMonto = group.reduce((s, r) => s + r.monto, 0);
       const totSaldo = group.reduce((s, r) => s + r.saldo, 0);
-      parts.push(`<tr class="summary-row"><td colspan="4">Total ${status}: ${group.length}</td><td>${fmt.format(totTarifa)}</td><td>${fmt.format(totMonto)}</td><td>${fmt.format(totSaldo)}</td><td colspan="3"></td></tr>`);
-    });
-    const tableHtml = parts.length ? `${header}${parts.join('')}</tbody></table>` : '<p>No hay partidos</p>';
+      const summary = `<div class="summary-line"><span>Partidos: ${group.length}</span><span>Tarifa: ${fmt.format(totTarifa)}</span><span>Monto: ${fmt.format(totMonto)}</span><span>Saldo: ${fmt.format(totSaldo)}</span></div>`;
+      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
+      return `<h3 class="h3 table-label">${labelMap[status]}</h3>${tableHeader}${rowsHtml}</tbody></table>${summary}`;
+    }).filter(Boolean);
+    const tableHtml = tableParts.length ? tableParts.join('') : '<p>No hay partidos</p>';
     document.getElementById('tabla').innerHTML = tableHtml;
   }
 
   document.getElementById('aplicar').addEventListener('click', update);
+  document.getElementById('limpiar').addEventListener('click', () => {
+    document.getElementById('f-jornada').value = '';
+    document.getElementById('f-rama').value = '';
+    document.getElementById('f-categoria').value = '';
+    update();
+  });
   update();
 }
 
