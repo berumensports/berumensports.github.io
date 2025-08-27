@@ -7,7 +7,7 @@ service cloud.firestore {
         exists(/databases/$(db)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(db)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
-    function isLiga(doc) { return doc.ligaId == "BERUMEN"; }
+    function isTorneo(doc) { return !('torneoId' in doc) || (doc.torneoId is string && doc.torneoId.size() > 0); }
     function isTemp(doc) { return !('tempId' in doc) || doc.tempId == "2025"; }
 
     match /users/{uid} {
@@ -17,16 +17,16 @@ service cloud.firestore {
 
     // Allow all authenticated users to create diagnostic entries
     match /diagnostics/{id} {
-      allow read: if signedIn() && isLiga(resource.data) && isTemp(resource.data);
-      allow create: if signedIn() && isLiga(request.resource.data) && isTemp(request.resource.data);
+      allow read: if signedIn() && isTorneo(resource.data) && isTemp(resource.data);
+      allow create: if signedIn() && isTorneo(request.resource.data) && isTemp(request.resource.data);
       // Only admins can modify or delete diagnostics
-      allow update, delete: if signedIn() && isAdmin() && isLiga(resource.data) && isTemp(resource.data);
+      allow update, delete: if signedIn() && isAdmin() && isTorneo(resource.data) && isTemp(resource.data);
     }
 
     match /{coll}/{id} {
-      allow read: if signedIn() && isLiga(resource.data) && isTemp(resource.data);
-      allow create: if signedIn() && isAdmin() && isLiga(request.resource.data) && isTemp(request.resource.data);
-      allow update, delete: if signedIn() && isAdmin() && isLiga(resource.data) && isTemp(resource.data);
+      allow read: if signedIn() && isTorneo(resource.data) && isTemp(resource.data);
+      allow create: if signedIn() && isAdmin() && isTorneo(request.resource.data) && isTemp(request.resource.data);
+      allow update, delete: if signedIn() && isAdmin() && isTorneo(resource.data) && isTemp(resource.data);
     }
   }
 }

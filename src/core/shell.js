@@ -1,9 +1,12 @@
+import { watchTorneos, getActiveTorneo, setActiveTorneo, onTorneoChange } from '../data/torneos.js';
+
 const shellHtml = `
 <header class="topbar">
   <button id="menu-btn" class="icon-btn" aria-label="Abrir menú">
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#menu"></use></svg>
   </button>
   <div id="user-info" class="topbar-title">Berumen <span id="user-role" class="chip"></span></div>
+  <select id="torneo-switch" class="input"></select>
   <button id="logout-btn" class="icon-btn" onclick="appLogout()" aria-label="Configuración" hidden>
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#settings"></use></svg>
   </button>
@@ -14,6 +17,7 @@ const shellHtml = `
     <li><a href="#/equipos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#users"></use></svg><span>Equipos</span></a></li>
     <li><a href="#/delegaciones"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Delegaciones</span></a></li>
     <li><a href="#/arbitros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Árbitros</span></a></li>
+    <li><a href="#/torneos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#chart"></use></svg><span>Torneos</span></a></li>
     <li><a href="#/partidos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#calendar"></use></svg><span>Partidos</span></a></li>
     <li><a href="#/cobros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Cobros</span></a></li>
     <li><a href="#/tarifas"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Tarifas</span></a></li>
@@ -36,6 +40,14 @@ export function renderShell() {
   const menuBtn = document.getElementById('menu-btn');
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('drawer-overlay');
+  const torneoSelect = document.getElementById('torneo-switch');
+  watchTorneos(list => {
+    torneoSelect.innerHTML = list.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+    if (!getActiveTorneo() && list.length) setActiveTorneo(list[0].id);
+    torneoSelect.value = getActiveTorneo() || '';
+  });
+  torneoSelect.addEventListener('change', e => setActiveTorneo(e.target.value));
+  onTorneoChange(id => { torneoSelect.value = id || ''; });
   function closeDrawer() {
     drawer.hidden = true;
     overlay.hidden = true;

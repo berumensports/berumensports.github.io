@@ -1,5 +1,6 @@
 import { db, collection, query, where, getDocs } from '../data/firebase.js';
-import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
+import { paths, TEMP_ID } from '../data/paths.js';
+import { getActiveTorneo } from '../data/torneos.js';
 
 export async function render(el) {
   const chartJs = await import('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js');
@@ -73,18 +74,18 @@ export async function render(el) {
     const { start, end } = getRange(period, dateStr);
 
     const [delegSnap, equipoSnap, partidoSnap, cobroSnap] = await Promise.all([
-      getDocs(query(collection(db, paths.delegaciones()), where('ligaId', '==', LIGA_ID))),
-      getDocs(query(collection(db, paths.equipos()), where('ligaId', '==', LIGA_ID))),
+      getDocs(query(collection(db, paths.delegaciones()), where('torneoId', '==', getActiveTorneo()))),
+      getDocs(query(collection(db, paths.equipos()), where('torneoId', '==', getActiveTorneo()))),
       getDocs(query(
         collection(db, paths.partidos()),
-        where('ligaId', '==', LIGA_ID),
+        where('torneoId', '==', getActiveTorneo()),
         where('tempId', '==', TEMP_ID),
         where('fecha', '>=', start),
         where('fecha', '<', end)
       )),
       getDocs(query(
         collection(db, paths.cobros()),
-        where('ligaId', '==', LIGA_ID),
+        where('torneoId', '==', getActiveTorneo()),
         where('tempId', '==', TEMP_ID),
         where('fechaCobro', '>=', start),
         where('fechaCobro', '<', end)

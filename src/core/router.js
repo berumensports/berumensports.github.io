@@ -1,8 +1,11 @@
+import { onTorneoChange } from '../data/torneos.js';
+
 const routes = {
   '/': () => import('../features/home.js'),
   '/equipos': () => import('../features/equipos.js'),
   '/delegaciones': () => import('../features/delegaciones.js'),
   '/arbitros': () => import('../features/arbitros.js'),
+  '/torneos': () => import('../features/torneos.js'),
   '/partidos': () => import('../features/partidos.js'),
   '/cobros': () => import('../features/cobros.js'),
   '/tarifas': () => import('../features/tarifas.js'),
@@ -36,5 +39,6 @@ export function initRouter() {
   if (bound) return;
   bound = true;
   window.addEventListener('hashchange', () => requestAnimationFrame(loadRoute));
+  onTorneoChange(() => requestAnimationFrame(loadRoute));
   requestAnimationFrame(loadRoute);
 }
