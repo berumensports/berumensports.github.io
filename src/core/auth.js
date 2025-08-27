@@ -33,6 +33,10 @@ export async function fetchUserRole(uid) {
     return cachedRole;
   } catch (err) {
     console.error('Failed to fetch user role', err);
+    if (err.code === 'permission-denied') {
+      await logout();
+      return null;
+    }
     cachedRole = 'consulta';
     localStorage.setItem('userRole', cachedRole);
     return cachedRole;

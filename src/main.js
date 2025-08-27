@@ -18,8 +18,10 @@ onAuth(async user => {
   if (!user) {
     showLogin();
   } else {
-    await fetchUserRole(user.uid);
-    initRouter();
+    const role = await fetchUserRole(user.uid);
+    if (role) {
+      initRouter();
+    }
   }
 });
 
