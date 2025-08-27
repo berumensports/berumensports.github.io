@@ -3,7 +3,7 @@ import { paths, LIGA_ID, TEMP_ID } from '../data/paths.js';
 
 export async function render(el) {
   const chartJs = await import('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js');
-  const { Chart } = chartJs;
+  const { default: Chart } = chartJs;
 
   el.innerHTML = `
     <div class="card">
