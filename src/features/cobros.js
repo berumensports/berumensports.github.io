@@ -46,7 +46,8 @@ export async function render(el) {
       const data = d.data();
       const pa = partidos[data.partidoId] || {};
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
-      const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
+      const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
+      const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
       const local = equipos[pa.localId] || pa.localId || '';
       const visita = equipos[pa.visitaId] || pa.visitaId || '';
       const tarifa = Number(data.tarifa || 0);
@@ -56,7 +57,11 @@ export async function render(el) {
       else if (monto < tarifa) { status = 'Pago parcial'; badgeClass = 'badge-warning'; }
       else { status = 'Pagado'; badgeClass = 'badge-success'; }
       const row = `<tr>
-        <td data-label="Partido">${pa.rama || ''} ${pa.categoria || ''} - ${local} vs ${visita} - ${fecha}</td>
+        <td data-label="Rama y Categoría"><span class="desktop-only">${pa.rama || ''}</span><span class="mobile-only">${pa.rama || ''} ${pa.categoria || ''}</span></td>
+        <td data-label="Categoría" class="desktop-only">${pa.categoria || ''}</td>
+        <td data-label="Equipos">${local} vs ${visita}</td>
+        <td data-label="Fecha y Hora"><span class="desktop-only">${fecha}</span><span class="mobile-only">${fecha} ${hora}</span></td>
+        <td data-label="Hora" class="desktop-only">${hora}</td>
         <td data-label="Tarifa">${fmt.format(tarifa)}</td>
         <td data-label="Monto">${fmt.format(monto)}</td>
         <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
@@ -66,7 +71,7 @@ export async function render(el) {
       else if (monto < tarifa) grupos.parciales.push(row);
       else grupos.pagados.push(row);
     });
-    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Partido</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
+    const renderGrupo = (titulo, rows) => rows.length ? `<h2 class="h2 mt-4">${titulo}</h2><table class="responsive-table"><thead><tr><th>Rama</th><th class="desktop-only">Categoría</th><th>Equipos</th><th>Fecha</th><th class="desktop-only">Hora</th><th>Tarifa</th><th>Monto</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table>` : '';
     const html = renderGrupo('Pendientes', grupos.pendientes) +
                  renderGrupo('Pagados Parcialmente', grupos.parciales) +
                  renderGrupo('Pagados', grupos.pagados);
