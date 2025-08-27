@@ -140,6 +140,15 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 .modal-footer { display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-4); }
 .modal-form { display:flex; flex-direction:column; gap:var(--space-4); }
 
+@media (min-width:1024px) {
+  .modal-sheet {
+    max-width:30vw;
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+  }
+}
+
 /* Row actions */
 .row-actions { display:flex; gap:var(--space-2); }
 
