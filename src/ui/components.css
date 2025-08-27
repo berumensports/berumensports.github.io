@@ -1,41 +1,125 @@
-button {
+/* Typography */
+h1, .h1 { font-size: var(--fs-h1); font-weight:600; margin:0 0 var(--space-4); }
+h2, .h2 { font-size: var(--fs-h2); font-weight:600; margin:0 0 var(--space-3); }
+h3, .h3 { font-size: var(--fs-h3); font-weight:600; margin:0 0 var(--space-2); }
+body { font-size: var(--fs-body); }
+label, .label { font-size: var(--fs-label); font-weight:500; }
+
+*:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+
+/* Buttons */
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-body);
+  line-height:1;
+  cursor:pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  min-height:44px;
+}
+.btn-primary {
   background: var(--color-primary);
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  color:#fff;
 }
-button[disabled] { opacity:0.5; }
-input, select {
-  padding: 0.5rem;
-  border: 1px solid #cbd5e0;
-  border-radius: var(--radius);
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-primary:active { background: var(--color-primary-pressed); }
+
+.btn-secondary {
+  background: transparent;
+  border:1px solid var(--color-border);
+  color: var(--color-text-strong);
 }
+.btn-secondary:hover { background: var(--color-surface-elevated); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-strong);
+}
+.btn-ghost:hover { background: var(--color-surface-elevated); }
+
+.btn-danger {
+  background: var(--color-danger);
+  color:#fff;
+}
+.btn-danger:hover { background:#b91c1c; }
+
+.btn[disabled] { opacity:0.5; cursor:not-allowed; }
+
+.icon-btn {
+  background: transparent;
+  border:none;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  width:44px; height:44px;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:inherit;
+}
+.icon-btn:hover { background: var(--color-surface-elevated); }
+
+.icon { width:24px; height:24px; }
+
+/* Inputs */
+.field { display:flex; flex-direction:column; gap:var(--space-1); }
+.input { height:44px; padding:0 var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); }
+.input:focus { border-color: var(--color-primary); outline:none; }
+.helper { color: var(--color-text-muted); font-size: var(--fs-label); }
+
+/* Card */
 .card {
-  background:#fff;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:var(--space);
-  margin:var(--space) 0;
+  background: var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+}
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); }
+
+/* Chips & Badges */
+.chip, .badge {
+  display:inline-block;
+  padding:0 var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-label);
+  line-height:1.6;
+}
+.badge { background: var(--color-surface-elevated); color: var(--color-text-muted); }
+
+/* FAB */
+.fab {
+  position:fixed;
+  right:var(--space-4);
+  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--space-4));
+  width:56px; height:56px;
+  border-radius:50%;
+  background:var(--color-primary);
+  color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: var(--shadow-2);
 }
 
+/* Modal */
 .modal-sheet {
-  background:#fff;
-  width:100%;
-  border-radius:var(--radius) var(--radius) 0 0;
-  box-shadow:var(--shadow);
-  padding:var(--space);
-  max-height:90%;
-  overflow:auto;
+  position:fixed; left:0; right:0; bottom:0;
+  max-height:90vh;
+  background:var(--color-surface);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-2);
+  display:flex; flex-direction:column;
+  padding:var(--space-4);
 }
+.modal-header { font-weight:600; margin-bottom:var(--space-4); }
+.modal-body { overflow:auto; flex:1; }
+.modal-footer { display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-4); }
+.modal-form { display:flex; flex-direction:column; gap:var(--space-4); }
 
-.modal-form {
-  display:flex;
-  flex-direction:column;
-  gap:var(--space);
-}
+/* Row actions */
+.row-actions { display:flex; gap:var(--space-2); }
 
-.modal-form > * {
-  width:100%;
-}
+/* Utility */
+.mt-4 { margin-top: var(--space-4); }
+

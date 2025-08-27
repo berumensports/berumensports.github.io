@@ -10,6 +10,12 @@ export function attachRowActions(container, { onEdit, onDelete }, isAdmin) {
   });
 }
 export function renderActions(id) {
-  return `<button data-action="edit" data-id="${id}" aria-label="Editar">✏️</button>
-          <button data-action="delete" data-id="${id}" aria-label="Eliminar">🗑️</button>`;
+  return `<span class="row-actions">
+    <button class="icon-btn" data-action="edit" data-id="${id}" aria-label="Editar">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
+    </button>
+    <button class="icon-btn" data-action="delete" data-id="${id}" aria-label="Eliminar">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#trash"></use></svg>
+    </button>
+  </span>`;
 }

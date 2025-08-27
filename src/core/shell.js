@@ -1,25 +1,31 @@
 const shellHtml = `
 <header class="topbar">
-  <button id="menu-btn" aria-label="Menu">☰</button>
-  <div id="user-info" class="topbar-title">Berumen</div>
-  <button id="logout-btn" onclick="appLogout()" aria-label="Cerrar sesión" hidden>⎋</button>
+  <button id="menu-btn" class="icon-btn" aria-label="Abrir menú">
+    <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#menu"></use></svg>
+  </button>
+  <div id="user-info" class="topbar-title">Berumen <span id="user-role" class="chip"></span></div>
+  <button id="logout-btn" class="icon-btn" onclick="appLogout()" aria-label="Configuración" hidden>
+    <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#settings"></use></svg>
+  </button>
 </header>
-<nav id="drawer" hidden>
-  <a href="#/">Home</a>
-  <a href="#/equipos">Equipos</a>
-  <a href="#/delegaciones">Delegaciones</a>
-  <a href="#/arbitros">Árbitros</a>
-  <a href="#/partidos">Partidos</a>
-  <a href="#/cobros">Cobros</a>
-  <a href="#/tarifas">Tarifas</a>
-  <a href="#/reportes">Reportes</a>
+<nav id="drawer" class="drawer" hidden>
+  <ul>
+    <li><a href="#/"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#home"></use></svg><span>Home</span></a></li>
+    <li><a href="#/equipos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#users"></use></svg><span>Equipos</span></a></li>
+    <li><a href="#/delegaciones"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Delegaciones</span></a></li>
+    <li><a href="#/arbitros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#user"></use></svg><span>Árbitros</span></a></li>
+    <li><a href="#/partidos"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#calendar"></use></svg><span>Partidos</span></a></li>
+    <li><a href="#/cobros"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Cobros</span></a></li>
+    <li><a href="#/tarifas"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Tarifas</span></a></li>
+    <li><a href="#/reportes"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#chart"></use></svg><span>Reportes</span></a></li>
+  </ul>
 </nav>
-<div id="drawer-overlay" hidden></div>
-<nav class="tabbar">
-  <a href="#/">🏠</a>
-  <a href="#/equipos">👥</a>
-  <a href="#/partidos">📅</a>
-  <a href="#/cobros">💰</a>
+<div id="drawer-overlay" class="drawer-overlay" hidden></div>
+<nav class="tabbar" role="navigation">
+  <a href="#/" class="tabbar-item"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#home"></use></svg><span>Home</span></a>
+  <a href="#/equipos" class="tabbar-item"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#users"></use></svg><span>Equipos</span></a>
+  <a href="#/partidos" class="tabbar-item"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#calendar"></use></svg><span>Partidos</span></a>
+  <a href="#/cobros" class="tabbar-item"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#currency"></use></svg><span>Cobros</span></a>
 </nav>
 <div id="modal-root"></div>`;
 

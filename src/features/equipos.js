@@ -8,7 +8,7 @@ import { attachRowActions, renderActions } from '../ui/row-actions.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><h2>Equipos</h2>${isAdmin?'<button id="nuevo">Nuevo</button>':''}<table id="list"></table></div>`;
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Equipos</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table id="list"></table></div>`;
   const delSnap = await getDocs(query(collection(db, paths.delegaciones()), where('ligaId','==',LIGA_ID), orderBy('nombre')));
   const delegMap = {};
   delSnap.forEach(d => { delegMap[d.id] = d.data().nombre; });
@@ -32,7 +32,13 @@ function openEquipo(id, delegaciones) {
   const ramaOpts = ['Varonil','Femenil'].map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = Array.from({length: 2020-2009+1}, (_,i)=>2009+i).map(y => `<option value="${y}">${y}</option>`).join('');
   const delOpts = Object.entries(delegaciones).map(([did,name]) => `<option value="${did}">${name}</option>`).join('');
-  openModal(`<form id="eq-form" class="modal-form"><input name="nombre" placeholder="Nombre"><select name="rama">${ramaOpts}</select><select name="categoria">${catOpts}</select><select name="delegacionId">${delOpts}</select><button>Guardar</button></form>`);
+  openModal(`<form id="eq-form" class="modal-form">
+    <label class="field"><span class="label">Nombre</span><input class="input" name="nombre" placeholder="Nombre"></label>
+    <label class="field"><span class="label">Rama</span><select class="input" name="rama">${ramaOpts}</select></label>
+    <label class="field"><span class="label">Categoría</span><select class="input" name="categoria">${catOpts}</select></label>
+    <label class="field"><span class="label">Delegación</span><select class="input" name="delegacionId">${delOpts}</select></label>
+    <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
+  </form>`);
   const form = document.getElementById('eq-form');
   form.addEventListener('submit', async e => {
     e.preventDefault();
