@@ -21,6 +21,15 @@ export function updateEquipo(id, data) {
 export function deleteEquipo(id) {
   return safeWrite(() => deleteDoc(doc(db, paths.equipos(), id)), 'deleteEquipo');
 }
+export function addDelegacion(data) {
+  return safeWrite(() => addDoc(collection(db, paths.delegaciones()), { ...data, ligaId: LIGA_ID }), 'addDelegacion');
+}
+export function updateDelegacion(id, data) {
+  return safeWrite(() => updateDoc(doc(db, paths.delegaciones(), id), data), 'updateDelegacion');
+}
+export function deleteDelegacion(id) {
+  return safeWrite(() => deleteDoc(doc(db, paths.delegaciones(), id)), 'deleteDelegacion');
+}
 export function addArbitro(data) {
   return safeWrite(() => addDoc(collection(db, paths.arbitros()), { ...data, ligaId: LIGA_ID }), 'addArbitro');
 }

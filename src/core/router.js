@@ -1,6 +1,7 @@
 const routes = {
   '/': () => import('../features/home.js'),
   '/equipos': () => import('../features/equipos.js'),
+  '/delegaciones': () => import('../features/delegaciones.js'),
   '/arbitros': () => import('../features/arbitros.js'),
   '/partidos': () => import('../features/partidos.js'),
   '/cobros': () => import('../features/cobros.js'),
