@@ -18,6 +18,10 @@ body {
   font-family: var(--font-family-base);
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 [hidden] { display:none !important; }
 
 #app {
