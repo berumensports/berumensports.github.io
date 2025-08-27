@@ -90,6 +90,9 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
   line-height:1.6;
 }
 .badge { background: var(--color-surface-elevated); color: var(--color-text-muted); }
+.badge-success { background: var(--color-success); color:#fff; }
+.badge-warning { background: var(--color-warning); color:#fff; }
+.badge-danger { background: var(--color-danger); color:#fff; }
 
 /* FAB */
 .fab {
