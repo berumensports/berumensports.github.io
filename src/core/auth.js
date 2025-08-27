@@ -11,6 +11,7 @@ import {
 
 const LIGA_ID = 'BERUMEN';
 let cachedRole = null;
+let cachedName = null;
 
 export function getUserRole() {
   if (cachedRole) return cachedRole;
@@ -19,18 +20,21 @@ export function getUserRole() {
   return null;
 }
 
-export async function fetchUserRole(uid) {
+export async function fetchUserInfo(uid) {
   const ref = doc(db, 'users', uid);
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       await setDoc(ref, { role: 'consulta', ligaId: LIGA_ID });
       cachedRole = 'consulta';
+      cachedName = '';
     } else {
-      cachedRole = snap.data().role;
+      const data = snap.data();
+      cachedRole = data.role;
+      cachedName = data.nombre || '';
     }
     localStorage.setItem('userRole', cachedRole);
-    return cachedRole;
+    return { role: cachedRole, nombre: cachedName };
   } catch (err) {
     console.error('Failed to fetch user role', err);
     if (err.code === 'permission-denied') {
@@ -38,8 +42,9 @@ export async function fetchUserRole(uid) {
       return null;
     }
     cachedRole = 'consulta';
+    cachedName = '';
     localStorage.setItem('userRole', cachedRole);
-    return cachedRole;
+    return { role: cachedRole, nombre: cachedName };
   }
 }
 
