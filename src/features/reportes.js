@@ -198,11 +198,10 @@ export async function render(el) {
     exportEl.appendChild(document.getElementById('tabla').cloneNode(true));
     exportEl.style.position = 'fixed';
     exportEl.style.top = '0';
-    exportEl.style.left = '0';
+    // Move the element off-screen instead of using opacity, otherwise
+    // html2canvas renders it fully transparent and the PDF comes out blank.
+    exportEl.style.left = '-10000px';
     exportEl.style.width = '100%';
-    // Use opacity instead of visibility so html2canvas renders the content
-    // but keep it out of view for the user
-    exportEl.style.opacity = '0';
     exportEl.style.pointerEvents = 'none';
     document.body.appendChild(exportEl);
     // Ensure the element is rendered before capturing it
