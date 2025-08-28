@@ -243,9 +243,9 @@ export async function render(el) {
     const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const docDefinition = {
       pageSize: 'A4',
-      pageMargins: [20, 24, 20, 28],
+      pageMargins: [20, 60, 20, 28],
       header: {
-        margin: [20, 10, 20, 0],
+        margin: [20, 20, 20, 0],
         stack: [
           { text: 'BERUMEN SPORTS', style: 'title', alignment: 'center' },
           { text: `Torneo: ${ligaNombre}    Fecha del reporte: ${fecha}`, style: 'small', alignment: 'center' }
