@@ -241,15 +241,14 @@ export async function render(el) {
     ];
     const now = new Date();
     const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
     const docDefinition = {
       pageSize: 'A4',
       pageMargins: [20, 24, 20, 28],
       header: {
         margin: [20, 10, 20, 0],
         stack: [
-          { text: 'Reporte de Cobros', style: 'title' },
-          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+          { text: 'BERUMEN SPORTS', style: 'title', alignment: 'center' },
+          { text: `Torneo: ${ligaNombre}    Fecha del reporte: ${fecha}`, style: 'small', alignment: 'center' }
         ]
       },
       footer: (currentPage, pageCount) => ({
@@ -259,6 +258,7 @@ export async function render(el) {
         margin: [0, 0, 0, 10]
       }),
       content: [
+        { text: 'Reporte de Cobros', style: 'subtitle', alignment: 'center' },
         {
           table: {
             headerRows: 1,
