@@ -61,6 +61,10 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 }
 .icon-btn:hover { background: var(--color-surface-elevated); }
 
+.icon-btn[data-action="ticket"] {
+  color: var(--color-text-strong);
+}
+
 .icon { width:24px; height:24px; }
 
 /* Inputs */
