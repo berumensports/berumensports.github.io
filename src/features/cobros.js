@@ -10,22 +10,8 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `
-    <div class="card">
-      <div class="page-header">
-        <h1 class="h1">Cobros</h1>
-      </div>
-      <div class="toolbar">
-        <input id="buscar" class="input" placeholder="Buscar">
-        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
-      </div>
-      <div id="lists"></div>
-      <div class="toolbar">
-        <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
-      </div>
-    </div>`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
-  const [eqSnap, paSnap, taSnap, joSnap, toSnap] = await Promise.all([
+  const [eqSnap, paSnap, taSnap, joSnap, delSnap, toSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
@@ -34,45 +20,81 @@ export async function render(el) {
     )),
     getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     getDoc(doc(db, paths.torneos(), getActiveTorneo()))
   ]);
-  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
+  const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
   const ligaNombre = toSnap.data()?.nombre || '';
+  const ramas = [...new Set(equiposData.map(e => e.rama).filter(Boolean))];
+  const categorias = [...new Set(equiposData.map(e => e.categoria).filter(Boolean))];
+  const jornadaOpts = Object.entries(jornadas).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
+  const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
+  const categoriaOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+  const delegacionOpts = Object.entries(delegaciones).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
+  el.innerHTML = `
+    <div class="card">
+      <div class="page-header">
+        <h1 class="h1">Cobros</h1>
+      </div>
+      <div class="toolbar">
+        <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+        <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
+        <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
+        <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
+        <button id="aplicar" class="btn btn-secondary">Aplicar</button>
+        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
+      </div>
+      <div id="lists"></div>
+      <div class="toolbar">
+        <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
+      </div>
+    </div>`;
   function tarifaPorPartido(pa) {
     return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
   }
+  let cobrosMap = {};
   let exportRows = [];
   let totalMonto = 0;
-
-  const q = query(
-    collection(db, paths.cobros()),
-    where('torneoId','==',getActiveTorneo()),
-    where('tempId','==',TEMP_ID),
-    orderBy('fechaCobro','desc')
-  );
-  const unsub = onSnapshot(q, snap => {
-    const cobros = {};
+  let open, onDelete;
+  if (isAdmin) {
+    open = (id) => {
+      if (id.startsWith('partido:')) {
+        const [, partidoId, , equipoId] = id.split(':');
+        openCobro(null, partidoId, equipoId);
+      } else openCobro(id);
+    };
+    onDelete = id => { if (!id.startsWith('partido:')) deleteCobro(id); };
+  }
+  function update() {
+    const jFilter = document.getElementById('f-jornada').value;
+    const rFilter = document.getElementById('f-rama').value;
+    const cFilter = document.getElementById('f-categoria').value;
+    const dFilter = document.getElementById('f-delegacion').value;
     exportRows = [];
     totalMonto = 0;
-    snap.docs.forEach(d => {
-      const data = d.data();
-      if (!cobros[data.partidoId]) cobros[data.partidoId] = {};
-      cobros[data.partidoId][data.equipoId] = { id: d.id, ...data };
-    });
     const rows = [];
     partidos.forEach(pa => {
+      if (jFilter && pa.jornadaId !== jFilter) return;
+      if (rFilter && pa.rama !== rFilter) return;
+      if (cFilter && pa.categoria !== cFilter) return;
+      if (dFilter) {
+        const localDel = equipos[pa.localId]?.delegacionId;
+        const visitaDel = equipos[pa.visitaId]?.delegacionId;
+        if (localDel !== dFilter && visitaDel !== dFilter) return;
+      }
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-      const local = equipos[pa.localId] || pa.localId || '';
-      const visita = equipos[pa.visitaId] || pa.visitaId || '';
+      const local = equipos[pa.localId]?.nombre || pa.localId || '';
+      const visita = equipos[pa.visitaId]?.nombre || pa.visitaId || '';
       const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
-
       function pushRow(eqId, eqNombre) {
-        const co = cobros[pa.id]?.[eqId] || {};
+        const co = cobrosMap[pa.id]?.[eqId] || {};
         const tarifa = Number(co.tarifa || tarifaPorPartido(pa));
         const monto = Number(co.monto || 0);
         const saldo = Math.max(tarifa - monto, 0);
@@ -103,15 +125,38 @@ export async function render(el) {
         });
         totalMonto += monto;
       }
-
       pushRow(pa.localId, local);
       pushRow(pa.visitaId, visita);
     });
     const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama y Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha y hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>`;
-  const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
+    const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
     document.getElementById('lists').innerHTML = html;
+    if (isAdmin) attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete }, true);
+  }
+  const q = query(
+    collection(db, paths.cobros()),
+    where('torneoId','==',getActiveTorneo()),
+    where('tempId','==',TEMP_ID),
+    orderBy('fechaCobro','desc')
+  );
+  const unsub = onSnapshot(q, snap => {
+    cobrosMap = {};
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (!cobrosMap[data.partidoId]) cobrosMap[data.partidoId] = {};
+      cobrosMap[data.partidoId][data.equipoId] = { id: d.id, ...data };
+    });
+    update();
   });
   pushCleanup(() => unsub());
+  document.getElementById('aplicar').addEventListener('click', update);
+  document.getElementById('limpiar').addEventListener('click', () => {
+    document.getElementById('f-jornada').value = '';
+    document.getElementById('f-rama').value = '';
+    document.getElementById('f-categoria').value = '';
+    document.getElementById('f-delegacion').value = '';
+    update();
+  });
   document.getElementById('exportar-pdf').addEventListener('click', () => {
     const body = [
       [
@@ -170,17 +215,6 @@ export async function render(el) {
     };
     exportToPdf(docDefinition, 'cobros.pdf');
   });
-  if (isAdmin) {
-    const open = (id) => {
-      if (id.startsWith('partido:')) {
-        const [, partidoId, , equipoId] = id.split(':');
-        openCobro(null, partidoId, equipoId);
-      }
-      else openCobro(id);
-    };
-    const onDelete = id => { if (!id.startsWith('partido:')) deleteCobro(id); };
-    attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete }, true);
-  }
 }
 
 function renderCobroActions(cobroId, partidoId, equipoId) {
