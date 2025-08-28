@@ -101,6 +101,8 @@ export async function render(el) {
       const tarifa = Number(cobro.tarifa || tarifaPorPartido(partido));
       const monto = Number(cobro.monto || 0);
       const saldo = Math.max(tarifa - monto, 0);
+      const rama = partido.rama || '';
+      const categoria = partido.categoria || '';
       const now = new Date();
       const fechaTicket = now.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'});
       const width = 80 * 2.8346457;
@@ -111,14 +113,16 @@ export async function render(el) {
         content: [
           { text: 'BERUMEN SPORTS', alignment: 'center' },
           { text: `TORNEO: ${ligaNombre}`, alignment: 'center' },
-          { text: `FECHA DE EMISIÓN: ${fechaTicket}`, alignment: 'center' },
+          { text: `FECHA DE EMISIÓN DEL TICKET: ${fechaTicket}`, alignment: 'center' },
           { canvas: [{ type: 'line', x1: 0, y1: 0, x2: width - 20, y2: 0, lineWidth: 1 }], margin: [0, 5, 0, 5] },
-          { text: partidoTxt, alignment: 'center' },
-          { text: `${fechaPa} ${horaPa}`, alignment: 'center' },
-          { text: equipoTxt, alignment: 'center' },
-          { text: `Tarifa: ${fmt.format(tarifa)}`, alignment: 'center' },
-          { text: `Monto: ${fmt.format(monto)}`, alignment: 'center' },
-          { text: `Saldo: ${fmt.format(saldo)}`, alignment: 'center' }
+          { text: `PARTIDO: ${partidoTxt}`, alignment: 'center' },
+          { text: `FECHA Y HORA DEL PARTIDO: ${fechaPa} ${horaPa}`, alignment: 'center' },
+          { text: `RAMA: ${rama}`, alignment: 'center' },
+          { text: `CATEGORÍA: ${categoria}`, alignment: 'center' },
+          { text: `EQUIPO: ${equipoTxt}`, alignment: 'center' },
+          { text: `TARIFA: ${fmt.format(tarifa)}`, alignment: 'center' },
+          { text: `MONTO: ${fmt.format(monto)}`, alignment: 'center' },
+          { text: `SALDO: ${fmt.format(saldo)}`, alignment: 'center' }
         ]
       };
       exportToPdf(docDefinition, `ticket_${cobroId}.pdf`);
