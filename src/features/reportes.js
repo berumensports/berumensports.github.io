@@ -59,6 +59,12 @@ export async function render(el) {
         <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
         <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
         <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
+        <select id="f-estado" class="input">
+          <option value="">Estado</option>
+          <option value="Pagado">Pagado</option>
+          <option value="Parcial">Parcial</option>
+          <option value="Pendiente">Pendiente</option>
+        </select>
         <button id="aplicar" class="btn btn-secondary">Aplicar</button>
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
@@ -74,6 +80,7 @@ export async function render(el) {
     const rFilter = document.getElementById('f-rama').value;
     const cFilter = document.getElementById('f-categoria').value;
     const dFilter = document.getElementById('f-delegacion').value;
+    const eFilter = document.getElementById('f-estado').value;
 
     const filtered = partidos.filter(pa => {
       if (jFilter && pa.jornadaId !== jFilter) return false;
@@ -113,6 +120,7 @@ export async function render(el) {
         if (!monto) status = 'Pendiente';
         else if (monto < tarifa) status = 'Parcial';
         else status = 'Pagado';
+        if (eFilter && status !== eFilter) return;
         const rowHtml = `<tr>
           <td data-label="Jornada">${jornada}</td>
           <td data-label="Rama">${rama}</td>
@@ -194,6 +202,7 @@ export async function render(el) {
     document.getElementById('f-rama').value = '';
     document.getElementById('f-categoria').value = '';
     document.getElementById('f-delegacion').value = '';
+    document.getElementById('f-estado').value = '';
     update();
   });
 

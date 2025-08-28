@@ -6,7 +6,9 @@ export function attachRowActions(container, { onEdit, onDelete }, isAdmin) {
     const id = btn.dataset.id;
     const action = btn.dataset.action;
     if (action === 'edit') onEdit(id);
-    else if (action === 'delete') onDelete(id);
+    else if (action === 'delete') {
+      if (confirm('¿Estás seguro de eliminar este registro?')) onDelete(id);
+    }
   });
 }
 export function renderActions(id) {
