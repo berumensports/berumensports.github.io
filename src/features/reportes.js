@@ -60,6 +60,9 @@ export async function render(el) {
       </div>
       <div id="kpis" class="dashboard-kpis"></div>
       <div id="tabla"></div>
+      <div class="toolbar">
+        <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
+      </div>
     </div>`;
 
   function update() {
@@ -174,6 +177,25 @@ export async function render(el) {
     document.getElementById('f-categoria').value = '';
     document.getElementById('f-delegacion').value = '';
     update();
+  });
+  document.getElementById('exportar-pdf').addEventListener('click', async () => {
+    const html2pdf = (await import('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js')).default;
+    const exportEl = document.createElement('div');
+    exportEl.appendChild(document.getElementById('kpis').cloneNode(true));
+    const breakEl = document.createElement('div');
+    breakEl.className = 'html2pdf__page-break';
+    exportEl.appendChild(breakEl);
+    exportEl.appendChild(document.getElementById('tabla').cloneNode(true));
+    exportEl.style.position = 'absolute';
+    exportEl.style.left = '-9999px';
+    document.body.appendChild(exportEl);
+    const opt = {
+      margin: 0.25,
+      filename: 'reporte.pdf',
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(exportEl).save();
+    document.body.removeChild(exportEl);
   });
   update();
 }
