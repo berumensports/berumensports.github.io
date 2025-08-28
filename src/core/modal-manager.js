@@ -24,3 +24,9 @@ export function closeModal() {
   modal.style.display = 'none';
   document.body.style.overflow = '';
 }
+
+// Expose closeModal globally so that inline event handlers like
+// <button onclick="closeModal()">Cancelar</button> can access it. This
+// solves the "closeModal is not defined" error triggered when clicking
+// the Cancel button inside modal dialogs.
+window.closeModal = closeModal;
