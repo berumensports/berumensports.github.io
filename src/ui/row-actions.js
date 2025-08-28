@@ -1,4 +1,4 @@
-export function attachRowActions(container, { onEdit, onDelete }, isAdmin) {
+export function attachRowActions(container, { onEdit, onDelete, onTicket }, isAdmin) {
   if (!isAdmin) return;
   container.addEventListener('click', e => {
     const btn = e.target.closest('button[data-action]');
@@ -8,6 +8,8 @@ export function attachRowActions(container, { onEdit, onDelete }, isAdmin) {
     if (action === 'edit') onEdit(id);
     else if (action === 'delete') {
       if (confirm('¿Estás seguro de eliminar este registro?')) onDelete(id);
+    } else if (action === 'ticket') {
+      onTicket(id);
     }
   });
 }
