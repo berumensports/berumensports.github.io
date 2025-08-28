@@ -5,7 +5,7 @@ import { addCobro, updateCobro, deleteCobro } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
-import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { attachRowActions } from '../ui/row-actions.js';
 import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
@@ -76,6 +76,53 @@ export async function render(el) {
     };
     onDelete = id => { if (!id.startsWith('partido:')) deleteCobro(id); };
   }
+  async function printTicket(cobroId) {
+      let partidoId, equipoId, cobro;
+      for (const [pId, eqMap] of Object.entries(cobrosMap)) {
+        for (const [eId, co] of Object.entries(eqMap)) {
+          if (co.id === cobroId) {
+            partidoId = pId;
+            equipoId = eId;
+            cobro = co;
+            break;
+          }
+        }
+        if (cobro) break;
+      }
+      if (!cobro) return;
+      const partido = partidos.find(p => p.id === partidoId) || {};
+      const fechaObj = partido.fecha ? new Date(partido.fecha.seconds * 1000) : null;
+      const fechaPa = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
+      const horaPa = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+      const local = equipos[partido.localId]?.nombre || partido.localId || '';
+      const visita = equipos[partido.visitaId]?.nombre || partido.visitaId || '';
+      const partidoTxt = `${local} vs ${visita}`;
+      const equipoTxt = equipos[equipoId]?.nombre || equipoId;
+      const tarifa = Number(cobro.tarifa || tarifaPorPartido(partido));
+      const monto = Number(cobro.monto || 0);
+      const saldo = Math.max(tarifa - monto, 0);
+      const now = new Date();
+      const fechaTicket = now.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'});
+      const width = 80 * 2.8346457;
+      const height = 160 * 2.8346457;
+      const docDefinition = {
+        pageSize: { width, height },
+        pageMargins: [10, 10, 10, 10],
+        content: [
+          { text: 'BERUMEN SPORTS', alignment: 'center' },
+          { text: `TORNEO: ${ligaNombre}`, alignment: 'center' },
+          { text: `FECHA DE EMISIÓN: ${fechaTicket}`, alignment: 'center' },
+          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: width - 20, y2: 0, lineWidth: 1 }], margin: [0, 5, 0, 5] },
+          { text: partidoTxt, alignment: 'center' },
+          { text: `${fechaPa} ${horaPa}`, alignment: 'center' },
+          { text: equipoTxt, alignment: 'center' },
+          { text: `Tarifa: ${fmt.format(tarifa)}`, alignment: 'center' },
+          { text: `Monto: ${fmt.format(monto)}`, alignment: 'center' },
+          { text: `Saldo: ${fmt.format(saldo)}`, alignment: 'center' }
+        ]
+      };
+      exportToPdf(docDefinition, `ticket_${cobroId}.pdf`);
+    }
   function update() {
     const jFilter = document.getElementById('f-jornada').value;
     const rFilter = document.getElementById('f-rama').value;
@@ -139,7 +186,7 @@ export async function render(el) {
     const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama y Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha y hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>`;
     const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
     document.getElementById('lists').innerHTML = html;
-    if (isAdmin) attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete }, true);
+    if (isAdmin) attachRowActions(document.getElementById('lists'), { onEdit: open, onDelete, onTicket: printTicket }, true);
   }
   const q = query(
     collection(db, paths.cobros()),
@@ -227,7 +274,17 @@ export async function render(el) {
 }
 
 function renderCobroActions(cobroId, partidoId, equipoId) {
-  if (cobroId) return renderActions(cobroId);
+  if (cobroId) return `<span class="row-actions">
+    <button class="icon-btn" data-action="edit" data-id="${cobroId}" aria-label="Editar">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
+    </button>
+    <button class="icon-btn" data-action="ticket" data-id="${cobroId}" aria-label="Ticket">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#ticket"></use></svg>
+    </button>
+    <button class="icon-btn" data-action="delete" data-id="${cobroId}" aria-label="Eliminar">
+      <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#trash"></use></svg>
+    </button>
+  </span>`;
   return `<span class="row-actions">
     <button class="icon-btn" data-action="edit" data-id="partido:${partidoId}:equipo:${equipoId}" aria-label="Registrar cobro">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
