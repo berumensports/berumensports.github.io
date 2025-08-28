@@ -205,6 +205,8 @@ export async function render(el) {
     exportEl.style.opacity = '0';
     exportEl.style.pointerEvents = 'none';
     document.body.appendChild(exportEl);
+    // Ensure the element is rendered before capturing it
+    await new Promise(resolve => requestAnimationFrame(resolve));
     const opt = {
       margin: 0.25,
       filename: 'reporte.pdf',
