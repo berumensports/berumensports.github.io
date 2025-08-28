@@ -58,9 +58,9 @@ export async function render(el) {
     const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
     const docDefinition = {
       pageSize: 'A4',
-      pageMargins: [20, 24, 20, 28],
+      pageMargins: [20, 60, 20, 28],
       header: {
-        margin: [20, 10, 20, 0],
+        margin: [20, 20, 20, 0],
         stack: [
           { text: 'Árbitros', style: 'title' },
           { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
