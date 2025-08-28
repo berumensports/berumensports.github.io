@@ -178,8 +178,18 @@ export async function render(el) {
     document.getElementById('f-delegacion').value = '';
     update();
   });
+
+  let html2pdfLib;
   document.getElementById('exportar-pdf').addEventListener('click', async () => {
-    const html2pdf = (await import('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js')).default;
+    if (!html2pdfLib) {
+      html2pdfLib = await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = () => resolve(window.html2pdf);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
     const exportEl = document.createElement('div');
     exportEl.appendChild(document.getElementById('kpis').cloneNode(true));
     const breakEl = document.createElement('div');
@@ -194,7 +204,7 @@ export async function render(el) {
       filename: 'reporte.pdf',
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
-    await html2pdf().set(opt).from(exportEl).save();
+    await html2pdfLib().set(opt).from(exportEl).save();
     document.body.removeChild(exportEl);
   });
   update();
