@@ -196,8 +196,11 @@ export async function render(el) {
     breakEl.className = 'html2pdf__page-break';
     exportEl.appendChild(breakEl);
     exportEl.appendChild(document.getElementById('tabla').cloneNode(true));
-    exportEl.style.position = 'absolute';
-    exportEl.style.left = '-9999px';
+    exportEl.style.position = 'fixed';
+    exportEl.style.top = '0';
+    exportEl.style.left = '0';
+    exportEl.style.width = '100%';
+    exportEl.style.visibility = 'hidden';
     document.body.appendChild(exportEl);
     const opt = {
       margin: 0.25,
