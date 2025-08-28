@@ -95,8 +95,6 @@ export async function render(el) {
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-      const local = equipos[pa.localId]?.nombre || pa.localId || '';
-      const visita = equipos[pa.visitaId]?.nombre || pa.visitaId || '';
       const jornada = jornadas[pa.jornadaId] || 'Sin jornada';
       const rama = pa.rama || '';
       const categoria = pa.categoria || '';
@@ -119,7 +117,6 @@ export async function render(el) {
           <td data-label="Jornada">${jornada}</td>
           <td data-label="Rama">${rama}</td>
           <td data-label="Categoría">${categoria}</td>
-          <td data-label="Equipos">${local} vs ${visita}</td>
           <td data-label="Equipo">${eqNombre}</td>
           <td data-label="Delegación">${delegacion}</td>
           <td data-label="Fecha">${fecha}</td>
@@ -134,7 +131,6 @@ export async function render(el) {
           jornada,
           rama,
           categoria,
-          partido: `${local} vs ${visita}`,
           equipo: eqNombre,
           delegacion,
           fecha,
@@ -185,7 +181,7 @@ export async function render(el) {
       const totMonto = group.reduce((s, r) => s + r.monto, 0);
       const totSaldo = group.reduce((s, r) => s + r.saldo, 0);
       const summary = `<div class="summary-line"><span>Cobros: ${group.length}</span><span>Tarifa: ${fmt.format(totTarifa)}</span><span>Monto: ${fmt.format(totMonto)}</span><span>Saldo: ${fmt.format(totSaldo)}</span></div>`;
-      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Equipo</th><th>Delegación</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
+      const tableHeader = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipo</th><th>Delegación</th><th>Fecha</th><th>Hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>`;
       return `<h3 class="h3 table-label">${labelMap[status]}</h3>${tableHeader}${rowsHtml}</tbody></table>${summary}`;
     }).filter(Boolean);
     const tableHtml = tableParts.length ? tableParts.join('') : '<p>No hay partidos</p>';
@@ -207,7 +203,6 @@ export async function render(el) {
         { text: 'Jornada', style: 'tableHeader' },
         { text: 'Rama', style: 'tableHeader' },
         { text: 'Categoría', style: 'tableHeader' },
-        { text: 'Equipos', style: 'tableHeader' },
         { text: 'Equipo', style: 'tableHeader' },
         { text: 'Delegación', style: 'tableHeader' },
         { text: 'Fecha', style: 'tableHeader' },
@@ -221,7 +216,6 @@ export async function render(el) {
         r.jornada,
         r.rama,
         r.categoria,
-        r.partido,
         r.equipo,
         r.delegacion,
         r.fecha,
@@ -232,7 +226,7 @@ export async function render(el) {
         r.estado
       ]),
       [
-        { text: 'Totales', colSpan: 8, alignment: 'right' }, {}, {}, {}, {}, {}, {}, {},
+        { text: 'Totales', colSpan: 7, alignment: 'right' }, {}, {}, {}, {}, {}, {},
         fmt.format(exportData.totalTarifa),
         fmt.format(exportData.totalMonto),
         fmt.format(exportData.totalSaldo),
@@ -262,7 +256,7 @@ export async function render(el) {
         {
           table: {
             headerRows: 1,
-            widths: ['auto','auto','auto','*','*','*','auto','auto','auto','auto','auto','auto'],
+            widths: ['auto','auto','auto','*','*','auto','auto','auto','auto','auto','auto'],
             body
           },
           layout: 'lightHorizontalLines',
