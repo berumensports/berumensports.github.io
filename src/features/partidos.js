@@ -10,6 +10,25 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
+  const [eqSnap, joSnap, arSnap, delSnap, toSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
+    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
+  ]);
+  const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
+  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const arbitros = Object.fromEntries(arSnap.docs.map(d => [d.id, d.data().nombre]));
+  const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
+  const ligaNombre = toSnap.data()?.nombre || '';
+  const ramas = [...new Set(equiposData.map(e => e.rama).filter(Boolean))];
+  const categorias = [...new Set(equiposData.map(e => e.categoria).filter(Boolean))];
+  const jornadaOpts = Object.entries(jornadas).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
+  const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
+  const categoriaOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+  const delegacionOpts = Object.entries(delegaciones).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
   el.innerHTML = `
     <div class="card">
       <div class="page-header">
@@ -17,7 +36,11 @@ export async function render(el) {
         ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
       </div>
       <div class="toolbar">
-        <input id="buscar" class="input" placeholder="Buscar">
+        <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+        <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
+        <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
+        <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
+        <button id="aplicar" class="btn btn-secondary">Aplicar</button>
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <table class="responsive-table"><thead><tr><th>Jornada</th><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
@@ -26,33 +49,36 @@ export async function render(el) {
       </div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const [eqSnap, joSnap, arSnap, toSnap] = await Promise.all([
-    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
-    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
-    getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
-    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
-  ]);
-  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
-  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
-  const arbitros = Object.fromEntries(arSnap.docs.map(d => [d.id, d.data().nombre]));
-  const ligaNombre = toSnap.data()?.nombre || '';
+  let partidosData = [];
   let exportRows = [];
-  const q = query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
-  const unsub = onSnapshot(q, snap => {
+  function update() {
+    const jFilter = document.getElementById('f-jornada').value;
+    const rFilter = document.getElementById('f-rama').value;
+    const cFilter = document.getElementById('f-categoria').value;
+    const dFilter = document.getElementById('f-delegacion').value;
+    const filtered = partidosData.filter(pa => {
+      if (jFilter && pa.jornadaId !== jFilter) return false;
+      if (rFilter && pa.rama !== rFilter) return false;
+      if (cFilter && pa.categoria !== cFilter) return false;
+      if (dFilter) {
+        const localDel = equipos[pa.localId]?.delegacionId;
+        const visitaDel = equipos[pa.visitaId]?.delegacionId;
+        if (localDel !== dFilter && visitaDel !== dFilter) return false;
+      }
+      return true;
+    });
     exportRows = [];
-    const rows = snap.docs.map(d => {
-      const data = d.data();
-      const fechaObj = data.fecha ? new Date(data.fecha.seconds * 1000) : null;
+    const rows = filtered.map(d => {
+      const fechaObj = d.fecha ? new Date(d.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'})} ${fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}` : '';
-      const jornada = jornadas[data.jornadaId] || '';
-      const local = equipos[data.localId] || data.localId;
-      const visita = equipos[data.visitaId] || data.visitaId;
-      const arbitro = arbitros[data.arbitroId] || '';
-      const ramaCat = `${data.rama || ''} ${data.categoria || ''}`.trim();
-      const estado = data.jugado ? 'Jugado' : 'Pendiente';
+      const jornada = jornadas[d.jornadaId] || '';
+      const local = equipos[d.localId]?.nombre || d.localId;
+      const visita = equipos[d.visitaId]?.nombre || d.visitaId;
+      const marcador = d.jugado && d.marcadorLocal != null && d.marcadorVisita != null ? ` (${d.marcadorLocal}-${d.marcadorVisita})` : '';
+      const arbitro = arbitros[d.arbitroId] || '';
+      const ramaCat = `${d.rama || ''} ${d.categoria || ''}`.trim();
+      const estado = d.jugado ? 'Jugado' : 'Pendiente';
       exportRows.push({ fecha, local, visita, arbitro, ramaCat, estado });
-      const marcador = data.jugado && data.marcadorLocal != null && data.marcadorVisita != null ?
-        ` (${data.marcadorLocal}-${data.marcadorVisita})` : '';
       return `<tr>
         <td data-label="Jornada">${jornada}</td>
         <td data-label="Fecha">${fecha}</td>
@@ -62,8 +88,22 @@ export async function render(el) {
     }).join('');
     const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?4:3}">No hay partidos</td></tr>`;
     document.getElementById('list').innerHTML = rows || empty;
+    if (isAdmin) attachRowActions(document.getElementById('list'), { onEdit: id=>openPartido(id), onDelete: id=>deletePartido(id) }, true);
+  }
+  const q = query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
+  const unsub = onSnapshot(q, snap => {
+    partidosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    update();
   });
   pushCleanup(() => unsub());
+  document.getElementById('aplicar').addEventListener('click', update);
+  document.getElementById('limpiar').addEventListener('click', () => {
+    document.getElementById('f-jornada').value = '';
+    document.getElementById('f-rama').value = '';
+    document.getElementById('f-categoria').value = '';
+    document.getElementById('f-delegacion').value = '';
+    update();
+  });
   document.getElementById('exportar-pdf').addEventListener('click', () => {
     const body = [
       [
@@ -127,7 +167,6 @@ export async function render(el) {
     const open = (id) => openPartido(id);
     document.getElementById('nuevo')?.addEventListener('click', () => open());
     document.getElementById('fab-nuevo')?.addEventListener('click', () => open());
-    attachRowActions(document.getElementById('list'), { onEdit: open, onDelete: id=>deletePartido(id) }, true);
   }
 }
 
