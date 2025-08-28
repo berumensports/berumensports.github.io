@@ -6,17 +6,30 @@ import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
 import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Equipos</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table class="responsive-table"><thead><tr><th>Nombre</th><th>Rama</th><th>Categoría</th><th>Delegación</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table></div>`;
-  const delSnap = await getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')));
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Equipos</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table class="responsive-table"><thead><tr><th>Nombre</th><th>Rama</th><th>Categoría</th><th>Delegación</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table><div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div></div>`;
+  const [delSnap, toSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
+    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
+  ]);
   const delegMap = {};
   delSnap.forEach(d => { delegMap[d.id] = d.data().nombre; });
+  const ligaNombre = toSnap.data()?.nombre || '';
+  let exportRows = [];
   const q = query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
+    exportRows = [];
     const rows = snap.docs.map(d => {
       const data = d.data();
+      exportRows.push({
+        nombre: data.nombre,
+        rama: data.rama || '',
+        categoria: data.categoria || '',
+        delegacion: delegMap[data.delegacionId] || ''
+      });
       return `<tr>
         <td data-label="Nombre">${data.nombre}</td>
         <td data-label="Rama">${data.rama||''}</td>
@@ -29,6 +42,56 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const body = [
+      [
+        { text: 'Nombre', style: 'tableHeader' },
+        { text: 'Rama', style: 'tableHeader' },
+        { text: 'Categoría', style: 'tableHeader' },
+        { text: 'Delegación', style: 'tableHeader' }
+      ],
+      ...exportRows.map(r => [r.nombre, r.rama, r.categoria, r.delegacion])
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Equipos', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 'auto', 'auto', 'auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
+    };
+    exportToPdf(docDefinition, 'equipos.pdf');
+  });
   if (isAdmin) {
     document.getElementById('nuevo').addEventListener('click', () => openEquipo(null, delegMap));
     attachRowActions(document.getElementById('list'), { onEdit:id=>openEquipo(id, delegMap), onDelete: id=>deleteEquipo(id) }, true);

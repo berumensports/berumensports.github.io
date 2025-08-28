@@ -6,6 +6,7 @@ import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
 import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -20,13 +21,19 @@ export async function render(el) {
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
+      <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+  const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
+  const ligaNombre = toSnap.data()?.nombre || '';
   const q = query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()), orderBy('rama'), orderBy('categoria'));
+  let exportRows = [];
   const unsub = onSnapshot(q, snap => {
+    exportRows = [];
     const rows = snap.docs.map(d => {
       const data = d.data();
       const monto = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(data.tarifa);
+      exportRows.push({ rama: data.rama, categoria: data.categoria, tarifa: data.tarifa });
       return `<tr>
         <td data-label="Rama">${data.rama}</td>
         <td data-label="Categoría">${data.categoria}</td>
@@ -38,6 +45,56 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+    const body = [
+      [
+        { text: 'Rama', style: 'tableHeader' },
+        { text: 'Categoría', style: 'tableHeader' },
+        { text: 'Tarifa', style: 'tableHeader' }
+      ],
+      ...exportRows.map(r => [r.rama, r.categoria, fmt.format(r.tarifa)])
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Tarifas', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', 'auto', 'auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
+    };
+    exportToPdf(docDefinition, 'tarifas.pdf');
+  });
   if (isAdmin) {
     const open = (id) => openTarifa(id);
     document.getElementById('nuevo')?.addEventListener('click', () => open());

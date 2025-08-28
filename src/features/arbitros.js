@@ -5,6 +5,8 @@ import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
 import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { getActiveTorneo } from '../data/torneos.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -19,12 +21,18 @@ export async function render(el) {
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <table class="responsive-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
+      <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+  const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
+  const ligaNombre = toSnap.data()?.nombre || '';
   const q = query(collection(db, paths.arbitros()), orderBy('nombre'));
+  let exportRows = [];
   const unsub = onSnapshot(q, snap => {
+    exportRows = [];
     const rows = snap.docs.map(d => {
       const data = d.data();
+      exportRows.push({ nombre: data.nombre, telefono: data.telefono || '', email: data.email || '' });
       return `<tr>
         <td data-label="Nombre">${data.nombre}</td>
         <td data-label="Teléfono">${data.telefono||''}</td>
@@ -36,6 +44,55 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const body = [
+      [
+        { text: 'Nombre', style: 'tableHeader' },
+        { text: 'Teléfono', style: 'tableHeader' },
+        { text: 'Email', style: 'tableHeader' }
+      ],
+      ...exportRows.map(r => [r.nombre, r.telefono, r.email])
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Árbitros', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 'auto', 'auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
+    };
+    exportToPdf(docDefinition, 'arbitros.pdf');
+  });
   if (isAdmin) {
     const open = (id) => openArbitro(id);
     document.getElementById('nuevo')?.addEventListener('click', () => open());

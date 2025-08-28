@@ -1,11 +1,12 @@
-import { db, collection, query, where, getDocs, orderBy } from '../data/firebase.js';
+import { db, collection, query, where, getDocs, orderBy, doc, getDoc } from '../data/firebase.js';
 import { paths, TEMP_ID } from '../data/paths.js';
 import { getActiveTorneo } from '../data/torneos.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
 
-  const [eqSnap, paSnap, coSnap, taSnap, joSnap, delSnap] = await Promise.all([
+  const [eqSnap, paSnap, coSnap, taSnap, joSnap, delSnap, toSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId', '==', getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
@@ -19,7 +20,8 @@ export async function render(el) {
     )),
     getDocs(query(collection(db, paths.tarifas()), where('torneoId', '==', getActiveTorneo()))),
     getDocs(query(collection(db, paths.jornadas()), where('torneoId', '==', getActiveTorneo()))),
-    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
+    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
   ]);
 
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data()]));
@@ -35,6 +37,8 @@ export async function render(el) {
   const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
   const ramas = new Set(eqSnap.docs.map(d => d.data().rama).filter(Boolean));
   const categorias = new Set(eqSnap.docs.map(d => d.data().categoria).filter(Boolean));
+  let exportData = { rows: [], totalTarifa: 0, totalMonto: 0, totalSaldo: 0 };
+  const ligaNombre = toSnap.data()?.nombre || '';
 
   function tarifaPorPartido(pa) {
     return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
@@ -85,6 +89,7 @@ export async function render(el) {
     let tarifaJug = 0;
     let totalCobrado = 0;
     let saldoPend = 0;
+    exportData = { rows: [], totalTarifa: 0, totalMonto: 0, totalSaldo: 0 };
 
     filtered.forEach(pa => {
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
@@ -125,6 +130,23 @@ export async function render(el) {
           <td data-label="Estado">${status}</td>
         </tr>`;
         rowsByStatus[status].push({ html: rowHtml, tarifa, monto, saldo });
+        exportData.rows.push({
+          jornada,
+          rama,
+          categoria,
+          partido: `${local} vs ${visita}`,
+          equipo: eqNombre,
+          delegacion,
+          fecha,
+          hora,
+          tarifa,
+          monto,
+          saldo,
+          estado: status
+        });
+        exportData.totalTarifa += tarifa;
+        exportData.totalMonto += monto;
+        exportData.totalSaldo += saldo;
         tarifaAg += tarifa;
         totalCobrado += monto;
         saldoPend += saldo;
@@ -179,40 +201,83 @@ export async function render(el) {
     update();
   });
 
-  let html2pdfLib;
-  document.getElementById('exportar-pdf').addEventListener('click', async () => {
-    if (!html2pdfLib) {
-      html2pdfLib = await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = () => resolve(window.html2pdf);
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-    const exportEl = document.createElement('div');
-    exportEl.appendChild(document.getElementById('kpis').cloneNode(true));
-    const breakEl = document.createElement('div');
-    breakEl.className = 'html2pdf__page-break';
-    exportEl.appendChild(breakEl);
-    exportEl.appendChild(document.getElementById('tabla').cloneNode(true));
-    exportEl.style.position = 'fixed';
-    exportEl.style.top = '0';
-    // Move the element off-screen instead of using opacity, otherwise
-    // html2canvas renders it fully transparent and the PDF comes out blank.
-    exportEl.style.left = '-10000px';
-    exportEl.style.width = '100%';
-    exportEl.style.pointerEvents = 'none';
-    document.body.appendChild(exportEl);
-    // Ensure the element is rendered before capturing it
-    await new Promise(resolve => requestAnimationFrame(resolve));
-    const opt = {
-      margin: 0.25,
-      filename: 'reporte.pdf',
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const body = [
+      [
+        { text: 'Jornada', style: 'tableHeader' },
+        { text: 'Rama', style: 'tableHeader' },
+        { text: 'Categoría', style: 'tableHeader' },
+        { text: 'Equipos', style: 'tableHeader' },
+        { text: 'Equipo', style: 'tableHeader' },
+        { text: 'Delegación', style: 'tableHeader' },
+        { text: 'Fecha', style: 'tableHeader' },
+        { text: 'Hora', style: 'tableHeader' },
+        { text: 'Tarifa', style: 'tableHeader' },
+        { text: 'Monto', style: 'tableHeader' },
+        { text: 'Saldo', style: 'tableHeader' },
+        { text: 'Estado', style: 'tableHeader' }
+      ],
+      ...exportData.rows.map(r => [
+        r.jornada,
+        r.rama,
+        r.categoria,
+        r.partido,
+        r.equipo,
+        r.delegacion,
+        r.fecha,
+        r.hora,
+        fmt.format(r.tarifa),
+        fmt.format(r.monto),
+        fmt.format(r.saldo),
+        r.estado
+      ]),
+      [
+        { text: 'Totales', colSpan: 8, alignment: 'right' }, {}, {}, {}, {}, {}, {}, {},
+        fmt.format(exportData.totalTarifa),
+        fmt.format(exportData.totalMonto),
+        fmt.format(exportData.totalSaldo),
+        ''
+      ]
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Reporte de Cobros', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto','auto','auto','*','*','*','auto','auto','auto','auto','auto','auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
     };
-    await html2pdfLib().set(opt).from(exportEl).save();
-    document.body.removeChild(exportEl);
+    exportToPdf(docDefinition, 'reporte.pdf');
   });
   update();
 }

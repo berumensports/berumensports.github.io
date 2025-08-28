@@ -6,6 +6,7 @@ import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
 import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -20,16 +21,25 @@ export async function render(el) {
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <table class="responsive-table"><thead><tr><th>Jornada</th><th>Fecha</th><th>Partido</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
+      <div class="toolbar">
+        <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
+      </div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const [eqSnap, joSnap] = await Promise.all([
+  const [eqSnap, joSnap, arSnap, toSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
-    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo())))
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
+    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
   ]);
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const arbitros = Object.fromEntries(arSnap.docs.map(d => [d.id, d.data().nombre]));
+  const ligaNombre = toSnap.data()?.nombre || '';
+  let exportRows = [];
   const q = query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('tempId','==',TEMP_ID), orderBy('fecha','desc'));
   const unsub = onSnapshot(q, snap => {
+    exportRows = [];
     const rows = snap.docs.map(d => {
       const data = d.data();
       const fechaObj = data.fecha ? new Date(data.fecha.seconds * 1000) : null;
@@ -37,6 +47,10 @@ export async function render(el) {
       const jornada = jornadas[data.jornadaId] || '';
       const local = equipos[data.localId] || data.localId;
       const visita = equipos[data.visitaId] || data.visitaId;
+      const arbitro = arbitros[data.arbitroId] || '';
+      const ramaCat = `${data.rama || ''} ${data.categoria || ''}`.trim();
+      const estado = data.jugado ? 'Jugado' : 'Pendiente';
+      exportRows.push({ fecha, local, visita, arbitro, ramaCat, estado });
       const marcador = data.jugado && data.marcadorLocal != null && data.marcadorVisita != null ?
         ` (${data.marcadorLocal}-${data.marcadorVisita})` : '';
       return `<tr>
@@ -50,6 +64,65 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const body = [
+      [
+        { text: 'Fecha/Hora', style: 'tableHeader' },
+        { text: 'Local', style: 'tableHeader' },
+        { text: 'Visita', style: 'tableHeader' },
+        { text: 'Árbitro', style: 'tableHeader' },
+        { text: 'Rama/Categoría', style: 'tableHeader' },
+        { text: 'Estado', style: 'tableHeader' }
+      ],
+      ...exportRows.map(r => [
+        r.fecha,
+        r.local,
+        r.visita,
+        r.arbitro,
+        r.ramaCat,
+        r.estado
+      ])
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Partidos', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', '*', '*', '*', 'auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
+    };
+    exportToPdf(docDefinition, 'partidos.pdf');
+  });
   if (isAdmin) {
     const open = (id) => openPartido(id);
     document.getElementById('nuevo')?.addEventListener('click', () => open());

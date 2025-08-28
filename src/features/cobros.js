@@ -6,6 +6,7 @@ import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
 import { getUserRole } from '../core/auth.js';
 import { attachRowActions, renderActions } from '../ui/row-actions.js';
+import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
@@ -19,9 +20,12 @@ export async function render(el) {
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
       <div id="lists"></div>
+      <div class="toolbar">
+        <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
+      </div>
     </div>`;
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
-  const [eqSnap, paSnap, taSnap, joSnap] = await Promise.all([
+  const [eqSnap, paSnap, taSnap, joSnap, toSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
@@ -29,15 +33,19 @@ export async function render(el) {
       where('tempId','==',TEMP_ID)
     )),
     getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()))),
-    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo())))
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
+    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
   ]);
   const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
   const partidos = paSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tarifas = taSnap.docs.map(d => d.data());
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const ligaNombre = toSnap.data()?.nombre || '';
   function tarifaPorPartido(pa) {
     return tarifas.find(t => t.rama === pa.rama && t.categoria === pa.categoria)?.tarifa || 0;
   }
+  let exportRows = [];
+  let totalMonto = 0;
 
   const q = query(
     collection(db, paths.cobros()),
@@ -47,6 +55,8 @@ export async function render(el) {
   );
   const unsub = onSnapshot(q, snap => {
     const cobros = {};
+    exportRows = [];
+    totalMonto = 0;
     snap.docs.forEach(d => {
       const data = d.data();
       if (!cobros[data.partidoId]) cobros[data.partidoId] = {};
@@ -70,6 +80,7 @@ export async function render(el) {
         if (!monto) { status = 'Pendiente'; badgeClass = 'badge-danger'; }
         else if (monto < tarifa) { status = 'Parcial'; badgeClass = 'badge-warning'; }
         else { status = 'Pagado'; badgeClass = 'badge-success'; }
+        const color = status === 'Pagado' ? 'green' : status === 'Parcial' ? 'orange' : 'red';
         rows.push(`<tr>
           <td data-label="Jornada">${jornada}</td>
           <td data-label="Rama y Categoría">${pa.rama || ''} ${pa.categoria || ''}</td>
@@ -82,16 +93,83 @@ export async function render(el) {
           <td data-label="Estado"><span class="badge ${badgeClass}">${status}</span></td>
           ${isAdmin?`<td data-label="Acciones">${renderCobroActions(co.id, pa.id, eqId)}</td>`:''}
         </tr>`);
+        exportRows.push({
+          fecha: `${fecha} ${hora}`,
+          equipo: eqNombre,
+          partido: `${local} vs ${visita}`,
+          monto,
+          estado: status,
+          color
+        });
+        totalMonto += monto;
       }
 
       pushRow(pa.localId, local);
       pushRow(pa.visitaId, visita);
     });
     const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama y Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha y hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>`;
-    const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
+  const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
     document.getElementById('lists').innerHTML = html;
   });
   pushCleanup(() => unsub());
+  document.getElementById('exportar-pdf').addEventListener('click', () => {
+    const body = [
+      [
+        { text: 'Fecha', style: 'tableHeader' },
+        { text: 'Equipo', style: 'tableHeader' },
+        { text: 'Partido', style: 'tableHeader' },
+        { text: 'Monto', style: 'tableHeader' },
+        { text: 'Estado', style: 'tableHeader' }
+      ],
+      ...exportRows.map(r => [
+        r.fecha,
+        r.equipo,
+        r.partido,
+        fmt.format(r.monto),
+        { text: r.estado, color: r.color }
+      ]),
+      [{ text: 'Total', colSpan: 3, alignment: 'right' }, {}, {}, fmt.format(totalMonto), '' ]
+    ];
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 24, 20, 28],
+      header: {
+        margin: [20, 10, 20, 0],
+        stack: [
+          { text: 'Cobros', style: 'title' },
+          { text: `${ligaNombre} - ${fecha} ${hora}`, style: 'small' }
+        ]
+      },
+      footer: (currentPage, pageCount) => ({
+        text: `Página ${currentPage} de ${pageCount}`,
+        alignment: 'center',
+        style: 'small',
+        margin: [0, 0, 0, 10]
+      }),
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', '*', 'auto', 'auto'],
+            body
+          },
+          layout: 'lightHorizontalLines',
+          style: 'small'
+        }
+      ],
+      styles: {
+        title: { fontSize: 14, bold: true },
+        subtitle: { fontSize: 12, margin: [0, 0, 0, 6] },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        small: { fontSize: 8 },
+        muted: { color: '#666666' }
+      }
+    };
+    exportToPdf(docDefinition, 'cobros.pdf');
+  });
   if (isAdmin) {
     const open = (id) => {
       if (id.startsWith('partido:')) {
