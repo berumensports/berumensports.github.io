@@ -200,7 +200,10 @@ export async function render(el) {
     exportEl.style.top = '0';
     exportEl.style.left = '0';
     exportEl.style.width = '100%';
-    exportEl.style.visibility = 'hidden';
+    // Use opacity instead of visibility so html2canvas renders the content
+    // but keep it out of view for the user
+    exportEl.style.opacity = '0';
+    exportEl.style.pointerEvents = 'none';
     document.body.appendChild(exportEl);
     const opt = {
       margin: 0.25,
