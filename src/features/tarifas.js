@@ -19,7 +19,7 @@ export async function render(el) {
       <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
-    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa" title="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
   const ligaNombre = toSnap.data()?.nombre || '';
   const q = query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()), orderBy('rama'), orderBy('categoria'));

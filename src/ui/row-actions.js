@@ -24,13 +24,13 @@ export function attachRowActions(container, handlers, isAdmin) {
 
 export function renderActions(id, extra = []) {
   return `<span class="row-actions">
-    <button class="icon-btn" data-action="edit" data-id="${id}" aria-label="Editar">
+    <button class="icon-btn" data-action="edit" data-id="${id}" aria-label="Editar" title="Editar">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
     </button>
-    <button class="icon-btn" data-action="delete" data-id="${id}" aria-label="Eliminar">
+    <button class="icon-btn" data-action="delete" data-id="${id}" aria-label="Eliminar" title="Eliminar">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#trash"></use></svg>
     </button>
-    ${extra.map(a => `<button class="icon-btn" data-action="${a.action}" data-id="${id}" aria-label="${a.label}">
+    ${extra.map(a => `<button class="icon-btn" data-action="${a.action}" data-id="${id}" aria-label="${a.label}" title="${a.label}">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#${a.icon}"></use></svg>
     </button>`).join('')}
   </span>`;
