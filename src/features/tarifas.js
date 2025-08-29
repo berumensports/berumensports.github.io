@@ -1,6 +1,6 @@
 import { db, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from '../data/firebase.js';
 import { paths } from '../data/paths.js';
-import { getActiveTorneo } from '../data/torneos.js';
+import { getActiveTorneo, updateTorneo } from '../data/torneos.js';
 import { addTarifa, updateTarifa, deleteTarifa } from '../data/repo.js';
 import { openModal, closeModal } from '../core/modal-manager.js';
 import { pushCleanup } from '../core/router.js';
@@ -10,18 +10,23 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
+  const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
+  const ligaNombre = toSnap.data()?.nombre || '';
+  const tarifaArbitro = toSnap.data()?.tarifaArbitro || '';
   el.innerHTML = `
     <div class="card">
       <div class="page-header">
         <h1 class="h1">Tarifas</h1>
         ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
       </div>
+      <div class="toolbar">
+        <label class="field"><span class="label">Árbitros (monto por partido)</span><input id="monto-arbitro" type="number" min="0" step="1" class="input" value="${tarifaArbitro}" ${isAdmin?'':'disabled'}></label>
+        ${isAdmin ? '<button id="guardar-arbitro" class="btn btn-secondary">Guardar</button>' : ''}
+      </div>
       <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nueva tarifa" title="Nueva tarifa"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
-  const ligaNombre = toSnap.data()?.nombre || '';
   const q = query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()), orderBy('rama'), orderBy('categoria'));
   let exportRows = [];
   const unsub = onSnapshot(q, snap => {
@@ -41,6 +46,12 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
+  if (isAdmin) {
+    document.getElementById('guardar-arbitro')?.addEventListener('click', async () => {
+      const monto = Number(document.getElementById('monto-arbitro').value);
+      await updateTorneo(getActiveTorneo(), { tarifaArbitro: monto });
+    });
+  }
   document.getElementById('exportar-pdf').addEventListener('click', () => {
     const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
     const body = [
