@@ -29,13 +29,12 @@ export async function render(el) {
         <h1 class="h1">Árbitros</h1>
         ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
       </div>
-      <div class="toolbar">
-        <input id="buscar" class="input" placeholder="Buscar">
-        <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
-        <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
-        <select id="f-estado" class="input"><option value="">Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option></select>
-        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
-      </div>
+        <div class="toolbar">
+          <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+          <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
+          <select id="f-estado" class="input"><option value="">Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option></select>
+          <button id="limpiar" class="btn btn-secondary">Limpiar</button>
+        </div>
       <table class="responsive-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
@@ -202,16 +201,15 @@ export async function render(el) {
       delegacionFilter = document.getElementById('f-delegacion').value;
       Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
     });
-    document.getElementById('limpiar').addEventListener('click', () => {
-      document.getElementById('buscar').value = '';
-      document.getElementById('f-estado').value = '';
-      document.getElementById('f-jornada').value = '';
-      document.getElementById('f-delegacion').value = '';
-      estadoFilter = '';
-      jornadaFilter = '';
-      delegacionFilter = '';
-      Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
-    });
+      document.getElementById('limpiar').addEventListener('click', () => {
+        document.getElementById('f-estado').value = '';
+        document.getElementById('f-jornada').value = '';
+        document.getElementById('f-delegacion').value = '';
+        estadoFilter = '';
+        jornadaFilter = '';
+        delegacionFilter = '';
+        Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
+      });
   document.getElementById('list').addEventListener('click', async e => {
     const tr = e.target.closest('tr.ar-row');
     if (!tr || e.target.closest('.row-actions')) return;
