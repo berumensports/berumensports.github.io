@@ -48,7 +48,7 @@ export async function render(el) {
         <button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button>
       </div>
     </div>
-    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo partido" title="Nuevo partido"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   let partidosData = [];
   let exportRows = [];
   function update() {

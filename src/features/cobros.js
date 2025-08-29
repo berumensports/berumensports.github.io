@@ -279,18 +279,18 @@ export async function render(el) {
 
 function renderCobroActions(cobroId, partidoId, equipoId) {
   if (cobroId) return `<span class="row-actions">
-    <button class="icon-btn" data-action="edit" data-id="${cobroId}" aria-label="Editar">
+    <button class="icon-btn" data-action="edit" data-id="${cobroId}" aria-label="Editar" title="Editar">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
     </button>
-    <button class="icon-btn" data-action="ticket" data-id="${cobroId}" aria-label="Ticket">
+    <button class="icon-btn" data-action="ticket" data-id="${cobroId}" aria-label="Ticket" title="Ticket">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#ticket"></use></svg>
     </button>
-    <button class="icon-btn" data-action="delete" data-id="${cobroId}" aria-label="Eliminar">
+    <button class="icon-btn" data-action="delete" data-id="${cobroId}" aria-label="Eliminar" title="Eliminar">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#trash"></use></svg>
     </button>
   </span>`;
   return `<span class="row-actions">
-    <button class="icon-btn" data-action="edit" data-id="partido:${partidoId}:equipo:${equipoId}" aria-label="Registrar cobro">
+    <button class="icon-btn" data-action="edit" data-id="partido:${partidoId}:equipo:${equipoId}" aria-label="Registrar cobro" title="Registrar cobro">
       <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#edit"></use></svg>
     </button>
   </span>`;

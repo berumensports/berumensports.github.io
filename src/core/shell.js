@@ -2,11 +2,11 @@ import { watchTorneos, getActiveTorneo, setActiveTorneo, onTorneoChange } from '
 
 const shellHtml = `
 <header class="topbar">
-  <button id="menu-btn" class="icon-btn" aria-label="Abrir menú">
+  <button id="menu-btn" class="icon-btn" aria-label="Abrir menú" title="Abrir menú">
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#menu"></use></svg>
   </button>
   <div id="user-info" class="topbar-title">Berumen <span id="user-role" class="chip"></span></div>
-  <button id="logout-btn" class="icon-btn" onclick="appLogout()" aria-label="Configuración" hidden>
+  <button id="logout-btn" class="icon-btn" onclick="appLogout()" aria-label="Configuración" title="Configuración" hidden>
     <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#settings"></use></svg>
   </button>
   <select id="torneo-switch" class="input"></select>

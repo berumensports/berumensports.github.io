@@ -38,7 +38,7 @@ export async function render(el) {
       <table class="responsive-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
-    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
+    ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro" title="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
   const q = query(collection(db, paths.arbitros()), orderBy('nombre'));
   let exportRows = [];
   const arbitrosData = {};
