@@ -110,6 +110,22 @@ body {
   pointer-events: auto;
 }
 
+@media (min-width:1025px) {
+  #app {
+    padding-left: calc(260px + var(--space-4));
+  }
+  .drawer {
+    transform: none;
+    top: var(--topbar-h);
+    width: 260px;
+    box-shadow: none;
+  }
+  #menu-btn,
+  .drawer-overlay {
+    display: none;
+  }
+}
+
 .tabbar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
