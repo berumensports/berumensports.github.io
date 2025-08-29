@@ -16,10 +16,6 @@ export async function render(el) {
         <h1 class="h1">Tarifas</h1>
         ${isAdmin ? '<button id="nuevo" class="btn btn-primary">Nuevo</button>' : ''}
       </div>
-      <div class="toolbar">
-        <input id="buscar" class="input" placeholder="Buscar">
-        <button id="limpiar" class="btn btn-secondary">Limpiar</button>
-      </div>
       <table class="responsive-table"><thead><tr><th>Rama</th><th>Categoría</th><th>Tarifa</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table>
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
