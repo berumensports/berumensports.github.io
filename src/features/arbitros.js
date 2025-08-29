@@ -17,6 +17,7 @@ export async function render(el) {
     getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
   ]);
   const ligaNombre = toSnap.data()?.nombre || '';
+  const tarifaArbitro = toSnap.data()?.tarifaArbitro || 0;
   const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
   const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
@@ -88,7 +89,10 @@ export async function render(el) {
       </tr>`;
     }).join('');
     const body = rows || `<tr><td data-label="Mensaje" colspan="7">No hay partidos</td></tr>`;
-    container.innerHTML = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Pagado</th></tr></thead><tbody>${body}</tbody></table>`;
+    const pagados = filtered.filter(m => m.pagadoArbitro).length;
+    const total = pagados * tarifaArbitro;
+    const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+    container.innerHTML = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama</th><th>Categoría</th><th>Equipos</th><th>Fecha</th><th>Hora</th><th>Pagado</th></tr></thead><tbody>${body}</tbody></table><div class="toolbar">Total pagado: ${fmt.format(total)}</div>`;
   }
 
   function buildPdfRows(arr) {
@@ -117,22 +121,24 @@ export async function render(el) {
       { text: 'Fecha', style: 'tableHeader' },
       { text: 'Hora', style: 'tableHeader' }
     ];
+    const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
     const content = [
       { text: 'Pagados', style: 'subtitle' },
       pagados.length ? {
         table: { headerRows: 1, widths: ['auto','auto','auto','*','auto','auto'], body: [header, ...buildPdfRows(pagados)] },
         layout: 'lightHorizontalLines', style: 'small'
       } : { text: 'Sin partidos', style: 'small' },
+      pagados.length ? { text: `Total: ${fmt.format(pagados.length * tarifaArbitro)}`, style: 'small', margin: [0,5,0,0] } : null,
       { text: 'Pendientes', style: 'subtitle', margin: [0,10,0,0] },
       pendientes.length ? {
         table: { headerRows: 1, widths: ['auto','auto','auto','*','auto','auto'], body: [header, ...buildPdfRows(pendientes)] },
         layout: 'lightHorizontalLines', style: 'small'
       } : { text: 'Sin partidos', style: 'small' },
-    ];
+    ].filter(Boolean);
     const agendados = matches.length;
     const pitados = matches.filter(m => m.jugado).length;
     content.push({ text: 'Resumen', style: 'subtitle', margin: [0,10,0,0] });
-    content.push({ text: `Partidos agendados: ${agendados}\nPartidos pitados: ${pitados}\nPagados: ${pagados.length}\nPendientes: ${pendientes.length}`, style: 'small' });
+    content.push({ text: `Partidos agendados: ${agendados}\nPartidos pitados: ${pitados}\nPagados: ${pagados.length}\nPendientes: ${pendientes.length}\nMonto a pagar: ${fmt.format(pagados.length * tarifaArbitro)}`, style: 'small' });
     const now = new Date();
     const fecha = now.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
