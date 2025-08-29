@@ -10,6 +10,19 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
+  const [toSnap, eqSnap, joSnap, delSnap] = await Promise.all([
+    getDoc(doc(db, paths.torneos(), getActiveTorneo())),
+    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
+  ]);
+  const ligaNombre = toSnap.data()?.nombre || '';
+  const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
+  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
+  const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
+  const jornadaOpts = Object.entries(jornadas).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
+  const delegacionOpts = Object.entries(delegaciones).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
   el.innerHTML = `
     <div class="card">
       <div class="page-header">
@@ -18,6 +31,8 @@ export async function render(el) {
       </div>
       <div class="toolbar">
         <input id="buscar" class="input" placeholder="Buscar">
+        <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+        <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
         <select id="f-estado" class="input"><option value="">Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option></select>
         <button id="limpiar" class="btn btn-secondary">Limpiar</button>
       </div>
@@ -25,19 +40,13 @@ export async function render(el) {
       <div class="toolbar"><button id="exportar-pdf" class="btn btn-secondary">Exportar PDF</button></div>
     </div>
     ${isAdmin ? '<button id="fab-nuevo" class="fab" aria-label="Nuevo árbitro"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#plus"></use></svg></button>' : ''}`;
-  const toSnap = await getDoc(doc(db, paths.torneos(), getActiveTorneo()));
-  const ligaNombre = toSnap.data()?.nombre || '';
-  const [eqSnap, joSnap] = await Promise.all([
-    getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
-    getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo())))
-  ]);
-  const equipos = Object.fromEntries(eqSnap.docs.map(d => [d.id, d.data().nombre]));
-  const jornadas = Object.fromEntries(joSnap.docs.map(d => [d.id, d.data().nombre]));
   const q = query(collection(db, paths.arbitros()), orderBy('nombre'));
   let exportRows = [];
   const arbitrosData = {};
   const matchesByArbitro = {};
   let estadoFilter = '';
+  let jornadaFilter = '';
+  let delegacionFilter = '';
 
   async function loadMatches(arbitroId) {
     const snap = await getDocs(query(collection(db, paths.partidos()), where('torneoId','==',getActiveTorneo()), where('arbitroId','==', arbitroId)));
@@ -48,11 +57,24 @@ export async function render(el) {
     const container = document.querySelector(`.matches[data-id="${arbitroId}"]`);
     if (!container) return;
     const matches = matchesByArbitro[arbitroId] || [];
-    const filtered = estadoFilter === '' ? matches : matches.filter(m => estadoFilter === 'pagado' ? m.pagadoArbitro : !m.pagadoArbitro);
+    let filtered = matches;
+    if (estadoFilter) {
+      filtered = filtered.filter(m => estadoFilter === 'pagado' ? m.pagadoArbitro : !m.pagadoArbitro);
+    }
+    if (jornadaFilter) {
+      filtered = filtered.filter(m => m.jornadaId === jornadaFilter);
+    }
+    if (delegacionFilter) {
+      filtered = filtered.filter(m => {
+        const localDel = equipos[m.localId]?.delegacionId;
+        const visitaDel = equipos[m.visitaId]?.delegacionId;
+        return localDel === delegacionFilter || visitaDel === delegacionFilter;
+      });
+    }
     const rows = filtered.map(m => {
       const jornada = jornadas[m.jornadaId] || '';
-      const local = equipos[m.localId] || m.localId;
-      const visita = equipos[m.visitaId] || m.visitaId;
+      const local = equipos[m.localId]?.nombre || m.localId;
+      const visita = equipos[m.visitaId]?.nombre || m.visitaId;
       const fechaObj = m.fecha ? new Date(m.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
@@ -73,8 +95,8 @@ export async function render(el) {
   function buildPdfRows(arr) {
     return arr.map(m => {
       const jornada = jornadas[m.jornadaId] || '';
-      const local = equipos[m.localId] || m.localId;
-      const visita = equipos[m.visitaId] || m.visitaId;
+      const local = equipos[m.localId]?.nombre || m.localId;
+      const visita = equipos[m.visitaId]?.nombre || m.visitaId;
       const fechaObj = m.fecha ? new Date(m.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
@@ -168,16 +190,28 @@ export async function render(el) {
     document.getElementById('list').innerHTML = rows || empty;
   });
   pushCleanup(() => unsub());
-  document.getElementById('f-estado').addEventListener('change', () => {
-    estadoFilter = document.getElementById('f-estado').value;
-    Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
-  });
-  document.getElementById('limpiar').addEventListener('click', () => {
-    document.getElementById('buscar').value = '';
-    document.getElementById('f-estado').value = '';
-    estadoFilter = '';
-    Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
-  });
+    document.getElementById('f-estado').addEventListener('change', () => {
+      estadoFilter = document.getElementById('f-estado').value;
+      Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
+    });
+    document.getElementById('f-jornada').addEventListener('change', () => {
+      jornadaFilter = document.getElementById('f-jornada').value;
+      Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
+    });
+    document.getElementById('f-delegacion').addEventListener('change', () => {
+      delegacionFilter = document.getElementById('f-delegacion').value;
+      Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
+    });
+    document.getElementById('limpiar').addEventListener('click', () => {
+      document.getElementById('buscar').value = '';
+      document.getElementById('f-estado').value = '';
+      document.getElementById('f-jornada').value = '';
+      document.getElementById('f-delegacion').value = '';
+      estadoFilter = '';
+      jornadaFilter = '';
+      delegacionFilter = '';
+      Object.keys(matchesByArbitro).forEach(id => renderMatches(id));
+    });
   document.getElementById('list').addEventListener('click', async e => {
     const tr = e.target.closest('tr.ar-row');
     if (!tr || e.target.closest('.row-actions')) return;
