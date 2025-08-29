@@ -42,6 +42,7 @@ export function renderShell() {
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('drawer-overlay');
   const torneoSelect = document.getElementById('torneo-switch');
+  const mql = window.matchMedia('(min-width:1025px)');
   watchTorneos(list => {
     torneoSelect.innerHTML = list.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
     if (!getActiveTorneo() && list.length) setActiveTorneo(list[0].id);
@@ -49,11 +50,24 @@ export function renderShell() {
   });
   torneoSelect.addEventListener('change', e => setActiveTorneo(e.target.value));
   onTorneoChange(id => { torneoSelect.value = id || ''; });
+  function updateDrawer() {
+    if (mql.matches) {
+      drawer.hidden = false;
+      overlay.hidden = true;
+    } else {
+      drawer.hidden = true;
+      overlay.hidden = true;
+    }
+  }
   function closeDrawer() {
+    if (mql.matches) return;
     drawer.hidden = true;
     overlay.hidden = true;
   }
+  updateDrawer();
+  mql.addEventListener('change', updateDrawer);
   menuBtn.addEventListener('click', () => {
+    if (mql.matches) return;
     drawer.hidden = !drawer.hidden;
     overlay.hidden = drawer.hidden;
   });
