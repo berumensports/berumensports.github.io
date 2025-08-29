@@ -222,3 +222,51 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
 @media (min-width: 768px) {
   .mobile-only { display: none !important; }
 }
+/* Home specific styles */
+.home-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+@media (min-width:768px) {
+  .home-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width:1024px) {
+  .home-kpis { grid-template-columns: repeat(4, 1fr); }
+}
+.kpi-card {
+  background: var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-3);
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-2);
+  text-decoration:none;
+  color:inherit;
+}
+.kpi-main { font-size: var(--fs-h2); font-weight:600; }
+.kpi-label { font-size: var(--fs-label); }
+.kpi-delta { font-size: var(--fs-label); color: var(--color-text-muted); }
+
+.home-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:var(--space-3); }
+
+.finance-cards { display:flex; flex-wrap:wrap; gap:var(--space-4); margin-bottom:var(--space-4); }
+.finance-card { flex:1; min-width:120px; background:var(--color-surface-elevated); border-radius:var(--radius-md); padding:var(--space-3); display:flex; flex-direction:column; gap:var(--space-1); }
+.finance-label { font-size:var(--fs-label); color:var(--color-text-muted); }
+.finance-value { font-size:var(--fs-h2); }
+
+.alerts-wrap { display:flex; flex-direction:column; gap:var(--space-3); }
+.alert-item { background:var(--color-surface-elevated); border-radius:var(--radius-md); height:32px; }
+
+.qa-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:var(--space-4); }
+.reports-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:var(--space-4); }
+.report-card { display:block; padding:var(--space-4); background:var(--color-surface-elevated); border-radius:var(--radius-md); text-decoration:none; color:inherit; text-align:center; }
+.onboarding-list { margin:0; padding-left:var(--space-4); display:flex; flex-direction:column; gap:var(--space-2); }
+
+.system-health { position:fixed; bottom:0; left:0; right:0; height:24px; text-align:center; font-size:var(--fs-label); background:var(--color-surface-elevated); color:var(--color-text-strong); }
+
+.skeleton { background:var(--color-surface-elevated); border-radius:var(--radius-md); height:24px; animation: skeleton-pulse 1.5s infinite ease-in-out; }
+@keyframes skeleton-pulse { 0% { opacity:0.6; } 50% { opacity:1; } 100% { opacity:0.6; } }
