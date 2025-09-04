@@ -154,6 +154,16 @@ label, .label { font-size: var(--fs-label); font-weight:500; }
   padding:var(--space-4);
   overflow-y:auto;
 }
+.modal-close {
+  position:absolute;
+  top:var(--space-3);
+  right:var(--space-3);
+  background:transparent;
+  border:none;
+  font-size:1.25rem;
+  line-height:1;
+  cursor:pointer;
+}
 .modal-header { font-weight:600; margin-bottom:var(--space-4); }
 .modal-body { overflow:auto; flex:1; }
 .modal-footer { display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-4); }

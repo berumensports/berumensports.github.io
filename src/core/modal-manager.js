@@ -10,12 +10,11 @@ export function openModal(content) {
       background: 'rgba(0,0,0,0.3)', display: 'flex',
       alignItems: 'flex-end', justifyContent: 'center', zIndex: 1100
     });
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     document.getElementById('modal-root').appendChild(modal);
   }
   modal.style.display = 'flex';
   modal.style.bottom = mb + 'px';
-  modal.innerHTML = `<div class="modal-sheet">${content}</div>`;
+  modal.innerHTML = `<div class="modal-sheet"><button type="button" class="modal-close" aria-label="Cerrar" onclick="closeModal()">&times;</button>${content}</div>`;
   document.body.style.overflow = 'hidden';
 }
 export function closeModal() {
