@@ -140,11 +140,9 @@ export async function render(el) {
       if (jFilter && pa.jornadaId !== jFilter) return;
       if (rFilter && pa.rama !== rFilter) return;
       if (cFilter && pa.categoria !== cFilter) return;
-      if (dFilter) {
-        const localDel = equipos[pa.localId]?.delegacionId;
-        const visitaDel = equipos[pa.visitaId]?.delegacionId;
-        if (localDel !== dFilter && visitaDel !== dFilter) return;
-      }
+      const localDel = equipos[pa.localId]?.delegacionId;
+      const visitaDel = equipos[pa.visitaId]?.delegacionId;
+      if (dFilter && localDel !== dFilter && visitaDel !== dFilter) return;
       const fechaObj = pa.fecha ? new Date(pa.fecha.seconds * 1000) : null;
       const fecha = fechaObj ? fechaObj.toLocaleDateString('es-MX',{year:'numeric',month:'2-digit',day:'2-digit'}) : '';
       const hora = fechaObj ? fechaObj.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
@@ -184,8 +182,8 @@ export async function render(el) {
         });
         totalMonto += monto;
       }
-      pushRow(pa.localId, local);
-      pushRow(pa.visitaId, visita);
+      if (!dFilter || localDel === dFilter) pushRow(pa.localId, local);
+      if (!dFilter || visitaDel === dFilter) pushRow(pa.visitaId, visita);
     });
     const header = `<table class="responsive-table"><thead><tr><th>Jornada</th><th>Rama y Categoría</th><th>Equipos</th><th>Equipo</th><th>Fecha y hora</th><th>Tarifa</th><th>Monto</th><th>Saldo</th><th>Estado</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody>`;
     const html = rows.length ? `${header}${rows.join('')}</tbody></table>` : '<p>No hay partidos</p>';
