@@ -31,6 +31,15 @@ export function updateDelegacion(id, data) {
 export function deleteDelegacion(id) {
   return safeWrite(() => deleteDoc(doc(db, paths.delegaciones(), id)), 'deleteDelegacion');
 }
+export function addCategoria(data) {
+  return safeWrite(() => addDoc(collection(db, paths.categorias()), { ...data, torneoId: getActiveTorneo() }), 'addCategoria');
+}
+export function updateCategoria(id, data) {
+  return safeWrite(() => updateDoc(doc(db, paths.categorias(), id), data), 'updateCategoria');
+}
+export function deleteCategoria(id) {
+  return safeWrite(() => deleteDoc(doc(db, paths.categorias(), id)), 'deleteCategoria');
+}
 export function addArbitro(data) {
   return safeWrite(() => addDoc(collection(db, paths.arbitros()), data), 'addArbitro');
 }

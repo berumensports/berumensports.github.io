@@ -112,13 +112,14 @@ export async function render(el) {
 
 async function openTarifa(id) {
   const isEdit = !!id;
-  const [eqSnap, taSnap] = await Promise.all([
+  const [eqSnap, catSnap, taSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
+    getDocs(query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     isEdit ? getDoc(doc(db, paths.tarifas(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => d.data());
   const ramas = [...new Set(equipos.map(e => e.rama).filter(Boolean))];
-  const categorias = [...new Set(equipos.map(e => e.categoria).filter(Boolean))];
+  const categorias = catSnap.docs.map(d => d.data().nombre);
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const existing = taSnap?.exists() ? taSnap.data() : { rama: '', categoria: '', tarifa: '' };

@@ -4,6 +4,7 @@ export const paths = {
   users: () => 'users',
   torneos: () => 'torneos',
   delegaciones: () => 'delegaciones',
+  categorias: () => 'categorias',
   equipos: () => 'equipos',
   arbitros: () => 'arbitros',
   tarifas: () => 'tarifas',

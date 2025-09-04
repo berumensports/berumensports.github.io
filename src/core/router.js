@@ -4,6 +4,7 @@ const routes = {
   '/': () => import('../features/home.js'),
   '/equipos': () => import('../features/equipos.js'),
   '/delegaciones': () => import('../features/delegaciones.js'),
+  '/categorias': () => import('../features/categorias.js'),
   '/arbitros': () => import('../features/arbitros.js'),
   '/torneos': () => import('../features/torneos.js'),
   '/partidos': () => import('../features/partidos.js'),

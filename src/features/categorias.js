@@ -1,0 +1,42 @@
+import { db, collection, query, where, onSnapshot, orderBy, doc, getDoc } from '../data/firebase.js';
+import { paths } from '../data/paths.js';
+import { getActiveTorneo } from '../data/torneos.js';
+import { addCategoria, updateCategoria, deleteCategoria } from '../data/repo.js';
+import { openModal, closeModal } from '../core/modal-manager.js';
+import { pushCleanup } from '../core/router.js';
+import { getUserRole } from '../core/auth.js';
+import { attachRowActions, renderActions } from '../ui/row-actions.js';
+
+export async function render(el) {
+  const isAdmin = getUserRole() === 'admin';
+  el.innerHTML = `<div class="card"><div class="page-header"><h1 class="h1">Categorías</h1>${isAdmin?'<button id="nuevo" class="btn btn-primary">Nuevo</button>':''}</div><table class="responsive-table"><thead><tr><th>Nombre</th>${isAdmin?'<th>Acciones</th>':''}</tr></thead><tbody id="list"></tbody></table></div>`;
+  const q = query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'));
+  const unsub = onSnapshot(q, snap => {
+    const rows = snap.docs.map(d => `<tr><td data-label="Nombre">${d.data().nombre}</td>${isAdmin?`<td data-label="Acciones">${renderActions(d.id)}</td>`:''}</tr>`).join('');
+    const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?2:1}">No hay categorías</td></tr>`;
+    document.getElementById('list').innerHTML = rows || empty;
+  });
+  pushCleanup(() => unsub());
+  if (isAdmin) {
+    document.getElementById('nuevo').addEventListener('click', () => openCategoria());
+    attachRowActions(document.getElementById('list'), { onEdit:id=>openCategoria(id), onDelete:id=>deleteCategoria(id) }, true);
+  }
+}
+
+async function openCategoria(id) {
+  const isEdit = !!id;
+  let existing = { nombre: '' };
+  if (isEdit) {
+    const snap = await getDoc(doc(db, paths.categorias(), id));
+    if (snap.exists()) existing = snap.data();
+  }
+  openModal(`<form id="cat-form" class="modal-form"><label class="field"><span class="label">Nombre</span><input class="input" name="nombre" placeholder="Nombre"></label><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary">Guardar</button></div></form>`);
+  const form = document.getElementById('cat-form');
+  form.nombre.value = existing.nombre || '';
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = { nombre: form.nombre.value };
+    if (isEdit) await updateCategoria(id, data); else await addCategoria(data);
+    closeModal();
+  });
+}

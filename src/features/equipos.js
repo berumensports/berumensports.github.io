@@ -10,7 +10,8 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  const [delSnap, toSnap, eqSnap] = await Promise.all([
+  const [catSnap, delSnap, toSnap, eqSnap] = await Promise.all([
+    getDocs(query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     getDoc(doc(db, paths.torneos(), getActiveTorneo())),
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
@@ -20,7 +21,7 @@ export async function render(el) {
   const equiposInit = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const ligaNombre = toSnap.data()?.nombre || '';
   const ramas = [...new Set(equiposInit.map(e => e.rama).filter(Boolean))];
-  const categorias = [...new Set(equiposInit.map(e => e.categoria).filter(Boolean))];
+  const categorias = catSnap.docs.map(d => d.data().nombre);
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const delegacionOpts = Object.entries(delegMap).map(([id,nombre]) => `<option value="${id}">${nombre}</option>`).join('');
@@ -66,7 +67,7 @@ export async function render(el) {
       </tr>`).join('');
     const empty = `<tr><td data-label="Mensaje" colspan="${isAdmin?5:4}">No hay equipos</td></tr>`;
     document.getElementById('list').innerHTML = rows || empty;
-    if (isAdmin) attachRowActions(document.getElementById('list'), { onEdit:id=>openEquipo(id, delegMap), onDelete:id=>deleteEquipo(id) }, true);
+    if (isAdmin) attachRowActions(document.getElementById('list'), { onEdit:id=>openEquipo(id, delegMap, categorias), onDelete:id=>deleteEquipo(id) }, true);
   }
   const q = query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'));
   const unsub = onSnapshot(q, snap => {
@@ -132,11 +133,11 @@ export async function render(el) {
     exportToPdf(docDefinition, 'equipos.pdf');
   });
   if (isAdmin) {
-    document.getElementById('nuevo').addEventListener('click', () => openEquipo(null, delegMap));
+    document.getElementById('nuevo').addEventListener('click', () => openEquipo(null, delegMap, categorias));
   }
 }
 
-async function openEquipo(id, delegaciones) {
+async function openEquipo(id, delegaciones, categorias) {
   const isEdit = !!id;
   let existing = { nombre: '', rama: '', categoria: '', delegacionId: '' };
   if (isEdit) {
@@ -144,7 +145,7 @@ async function openEquipo(id, delegaciones) {
     if (snap.exists()) existing = snap.data();
   }
   const ramaOpts = ['Varonil','Femenil'].map(r => `<option value="${r}">${r}</option>`).join('');
-  const catOpts = Array.from({length: 2020-2009+1}, (_,i)=>2009+i).map(y => `<option value="${y}">${y}</option>`).join('');
+  const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const delOpts = Object.entries(delegaciones).map(([did,name]) => `<option value="${did}">${name}</option>`).join('');
   openModal(`<form id="eq-form" class="modal-form">
     <label class="field"><span class="label">Nombre</span><input class="input" name="nombre" placeholder="Nombre"></label>
