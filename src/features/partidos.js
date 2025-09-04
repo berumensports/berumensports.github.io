@@ -84,7 +84,9 @@ export async function render(el) {
       const arbitro = arbitros[d.arbitroId] || '';
       const ramaCat = `${d.rama || ''} ${d.categoria || ''}`.trim();
       const estado = d.jugado ? 'Jugado' : 'Pendiente';
-      exportRows.push({ fecha, local, visita, arbitro, ramaCat, estado });
+      const marcadorLocal = d.jugado && d.marcadorLocal != null ? String(d.marcadorLocal) : '';
+      const marcadorVisita = d.jugado && d.marcadorVisita != null ? String(d.marcadorVisita) : '';
+      exportRows.push({ fecha, local, marcadorLocal, visita, marcadorVisita, arbitro, ramaCat, estado });
       return `<tr>
         <td data-label="Jornada">${jornada}</td>
         <td data-label="Fecha">${fecha}</td>
@@ -115,16 +117,16 @@ export async function render(el) {
     const body = [
       [
         { text: 'Fecha/Hora', style: 'tableHeader' },
-        { text: 'Local', style: 'tableHeader' },
-        { text: 'Visita', style: 'tableHeader' },
+        { text: 'Local/Marcador', style: 'tableHeader' },
+        { text: 'Visita/Marcador', style: 'tableHeader' },
         { text: 'Árbitro', style: 'tableHeader' },
         { text: 'Rama/Categoría', style: 'tableHeader' },
         { text: 'Estado', style: 'tableHeader' }
       ],
       ...exportRows.map(r => [
         r.fecha,
-        r.local,
-        r.visita,
+        r.marcadorLocal ? `${r.local} \n${r.marcadorLocal}` : r.local,
+        r.marcadorVisita ? `${r.visita} \n${r.marcadorVisita}` : r.visita,
         r.arbitro,
         r.ramaCat,
         r.estado
