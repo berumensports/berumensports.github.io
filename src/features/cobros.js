@@ -11,7 +11,7 @@ import { exportToPdf } from '../pdf/export.js';
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
   const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
-  const [eqSnap, paSnap, taSnap, joSnap, delSnap, toSnap] = await Promise.all([
+  const [eqSnap, paSnap, taSnap, joSnap, delSnap, toSnap, catSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(
       collection(db, paths.partidos()),
@@ -21,7 +21,8 @@ export async function render(el) {
     getDocs(query(collection(db, paths.tarifas()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
-    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
+    getDoc(doc(db, paths.torneos(), getActiveTorneo())),
+    getDocs(query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
   ]);
   const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
@@ -31,7 +32,7 @@ export async function render(el) {
   const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
   const ligaNombre = toSnap.data()?.nombre || '';
   const ramas = [...new Set(equiposData.map(e => e.rama).filter(Boolean))];
-  const categorias = [...new Set(equiposData.map(e => e.categoria).filter(Boolean))];
+  const categorias = catSnap.docs.map(d => d.data().nombre);
   const jornadaOpts = Object.entries(jornadas).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const categoriaOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');

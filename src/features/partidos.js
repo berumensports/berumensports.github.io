@@ -10,12 +10,13 @@ import { exportToPdf } from '../pdf/export.js';
 
 export async function render(el) {
   const isAdmin = getUserRole() === 'admin';
-  const [eqSnap, joSnap, arSnap, delSnap, toSnap] = await Promise.all([
+  const [eqSnap, joSnap, arSnap, delSnap, toSnap, catSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()))),
     getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
     getDocs(query(collection(db, paths.delegaciones()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
-    getDoc(doc(db, paths.torneos(), getActiveTorneo()))
+    getDoc(doc(db, paths.torneos(), getActiveTorneo())),
+    getDocs(query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre')))
   ]);
   const equiposData = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const equipos = Object.fromEntries(equiposData.map(d => [d.id, d]));
@@ -24,7 +25,7 @@ export async function render(el) {
   const delegaciones = Object.fromEntries(delSnap.docs.map(d => [d.id, d.data().nombre]));
   const ligaNombre = toSnap.data()?.nombre || '';
   const ramas = [...new Set(equiposData.map(e => e.rama).filter(Boolean))];
-  const categorias = [...new Set(equiposData.map(e => e.categoria).filter(Boolean))];
+  const categorias = catSnap.docs.map(d => d.data().nombre);
   const jornadaOpts = Object.entries(jornadas).map(([id,n]) => `<option value="${id}">${n}</option>`).join('');
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const categoriaOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -181,15 +182,16 @@ export async function render(el) {
 
 async function openPartido(id) {
   const isEdit = !!id;
-  const [eqSnap, arSnap, joSnap, paSnap] = await Promise.all([
+  const [eqSnap, arSnap, joSnap, catSnap, paSnap] = await Promise.all([
     getDocs(query(collection(db, paths.equipos()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     getDocs(query(collection(db, paths.arbitros()), orderBy('nombre'))),
     getDocs(query(collection(db, paths.jornadas()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
+    getDocs(query(collection(db, paths.categorias()), where('torneoId','==',getActiveTorneo()), orderBy('nombre'))),
     isEdit ? getDoc(doc(db, paths.partidos(), id)) : Promise.resolve(null)
   ]);
   const equipos = eqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const ramas = [...new Set(equipos.map(e => e.rama).filter(Boolean))];
-  const categorias = [...new Set(equipos.map(e => e.categoria).filter(Boolean))];
+  const categorias = catSnap.docs.map(d => d.data().nombre);
   const ramaOpts = ramas.map(r => `<option value="${r}">${r}</option>`).join('');
   const catOpts = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
   const arOpts = arSnap.docs.map(d => `<option value="${d.id}">${d.data().nombre}</option>`).join('');

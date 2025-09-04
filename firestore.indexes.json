@@ -48,6 +48,14 @@
       ]
     },
     {
+      "collectionGroup": "categorias",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath":"torneoId","order":"ASCENDING"},
+        {"fieldPath":"nombre","order":"ASCENDING"}
+      ]
+    },
+    {
       "collectionGroup": "tarifas",
       "queryScope": "COLLECTION",
       "fields": [
