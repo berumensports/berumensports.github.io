@@ -37,6 +37,7 @@ export async function render(el) {
       </div>
       <div class="toolbar">
         <select id="f-jornada" class="input"><option value="">Jornada</option>${jornadaOpts}</select>
+        <input id="f-fecha" type="date" class="input" aria-label="Fecha">
         <select id="f-rama" class="input"><option value="">Rama</option>${ramaOpts}</select>
         <select id="f-categoria" class="input"><option value="">Categoría</option>${categoriaOpts}</select>
         <select id="f-delegacion" class="input"><option value="">Delegación</option>${delegacionOpts}</select>
@@ -53,11 +54,16 @@ export async function render(el) {
   let exportRows = [];
   function update() {
     const jFilter = document.getElementById('f-jornada').value;
+    const fFilter = document.getElementById('f-fecha').value;
     const rFilter = document.getElementById('f-rama').value;
     const cFilter = document.getElementById('f-categoria').value;
     const dFilter = document.getElementById('f-delegacion').value;
     const filtered = partidosData.filter(pa => {
       if (jFilter && pa.jornadaId !== jFilter) return false;
+      if (fFilter) {
+        const paDate = pa.fecha ? new Date(pa.fecha.seconds * 1000).toLocaleDateString('en-CA') : '';
+        if (paDate !== fFilter) return false;
+      }
       if (rFilter && pa.rama !== rFilter) return false;
       if (cFilter && pa.categoria !== cFilter) return false;
       if (dFilter) {
@@ -99,6 +105,7 @@ export async function render(el) {
   document.getElementById('aplicar').addEventListener('click', update);
   document.getElementById('limpiar').addEventListener('click', () => {
     document.getElementById('f-jornada').value = '';
+    document.getElementById('f-fecha').value = '';
     document.getElementById('f-rama').value = '';
     document.getElementById('f-categoria').value = '';
     document.getElementById('f-delegacion').value = '';
