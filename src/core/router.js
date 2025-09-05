@@ -28,7 +28,10 @@ function runCleanup() {
 export function pushCleanup(fn) { cleanupFns.push(fn); }
 
 async function loadRoute() {
-  if (!location.hash) location.replace('#/');
+  if (!location.hash) {
+    location.replace('#/');
+    return;
+  }
   const path = location.hash.slice(1);
   const loader = routes[path];
   if (!loader) return;
