@@ -79,7 +79,9 @@ body {
 
 .drawer {
   position: fixed;
-  top: 0; bottom: 0; left: 0;
+  top: var(--topbar-h);
+  bottom: 0;
+  left: 0;
   width: 84vw;
   max-width: 320px;
   background: var(--color-surface);
